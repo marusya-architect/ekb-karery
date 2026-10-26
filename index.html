@@ -859,6 +859,9 @@ const GPLayer=L.Layer.extend({
   c.style.transform=`matrix(${(b.x-a.x)/c.width},${(b.y-a.y)/c.width},${(d.x-a.x)/c.height},${(d.y-a.y)/c.height},${a.x},${a.y})`}
 });
 const gp=new GPLayer();
+// --- рельеф: Esri World Hillshade (по ЦМР), режим умножения поверх подложки
+map.createPane('reliefP').style.zIndex=260;map.getPane('reliefP').style.mixBlendMode='multiply';map.getPane('reliefP').style.pointerEvents='none';
+const relief=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}',{pane:'reliefP',opacity:.6,maxNativeZoom:16,maxZoom:17,attribution:'рельеф: Esri World Hillshade'});
 function lbx(i){const R=RET[i];let d=document.getElementById('lbx');if(!d){d=document.createElement('div');d.id='lbx';document.body.appendChild(d);d.onclick=e=>{if(e.target===d||e.target.tagName==='BUTTON')d.hidden=true};document.addEventListener('keydown',e=>{if(e.key==='Escape')d.hidden=true})}
  d.innerHTML=`<button type="button" aria-label="Закрыть">✕</button><img src="${R.img}" alt="${R.t}"><p>${R.t}. Снимки разных лет из архива Esri World Imagery Wayback, контур объекта выделен</p>`;d.hidden=false}
 // --- ретро-снимок: Esri World Imagery Wayback (выпуск 2020-01-08 для мелких масштабов, 2018-01-08 для крупных; съёмка DigitalGlobe 2014–2015)
@@ -928,7 +931,6 @@ const PPC={граница_пилотной_площадки:['--pilot',0],зон
 const PPCol=k=>{const c=PPC[k][0];return c.startsWith('--')?css(c):c};
 const pp=L.layerGroup();
 for(const k in D.pp){const c=PPCol(k),o=PPC[k][1];L.geoJSON(D.pp[k],{style:{color:c,weight:k==='экотропа'?3:2,dashArray:k==='граница_пилотной_площадки'?'6 4':null,fillColor:c,fillOpacity:o},pointToLayer:(f,ll)=>L.circleMarker(ll,{radius:5,color:'#111',weight:1,fillColor:'#fff',fillOpacity:1}),onEachFeature:(f,l)=>l.bindPopup(`<div class="pop"><h3>Шабровские карьеры – проект</h3>${PPN[k]}${f.properties.площадь_га?'<br>'+fmt('га',+f.properties.площадь_га):''}${f.properties.длина_м?'<br>'+fmt('_м',+f.properties.длина_м):''}</div>`)}).addTo(pp)}
-pp.addTo(map);
 // --- подписи
 const lbl=(cls,html)=>L.divIcon({className:'',html:`<div class="tl ${cls}">${html}</div>`,iconSize:[0,0]});
 const rnLab=L.layerGroup();
@@ -988,6 +990,7 @@ function legend(){const lg=document.getElementById('legend');if(!lg||typeof flt=
  if(map.hasLayer(numLayer))h+=r('<i class="nn">12</i>','номер объекта (как в списке)');
  h+='<h4>Границы</h4>'+r('<i class="ln" style="border-color:#d62728;border-top-style:dashed;border-top-width:3px"></i>','граница ГО')+(map.hasLayer(rn)?r('<i class="ln" style="border-color:#ef6a74;border-top-width:1.5px"></i>','границы районов'):'');
  if(map.hasLayer(szz))h+='<h4>Санитарно-защитные зоны (ориентир., 500 м)</h4>'+r('<i class="ar" style="background:rgba(230,126,34,.4);border:1.5px solid #a04000"></i>','СЗЗ действующих карьеров и отвалов')+r('<i class="ar" style="background:rgba(158,123,196,.3);border:1.5px dashed #6a3d9a"></i>','СЗЗ полигонов ТБО и свалок');
+ if(map.hasLayer(relief))h+='<h4>Рельеф</h4>'+r('<i class="ar" style="background:linear-gradient(135deg,#fff,#999 60%,#444)"></i>','отмывка рельефа (Esri World Hillshade): освещение с северо-запада');
  if(map.hasLayer(retLayer))h+=r('<i style="font-style:normal">🕓</i>','окно в прошлое – серия снимков разных лет');
  if(map.hasLayer(retro))h+='<h4>Ретро-снимок</h4><div style="font-size:11px">Esri World Imagery Wayback, съёмка DigitalGlobe 2014–2015 гг. (даты различаются по участкам)'+(swipeOn?'; слева от шторки – ретро, справа – 2025 г.':'')+'</div>';
  if(map.hasLayer(gp))h+='<h4>Генплан до 2045 г. (утв. редакция 2025 г.)</h4>'+r('<i class="ar" style="background:linear-gradient(90deg,#f26a50,#c2007b,#8a6364,#1c8f68,#cfd0ff)"></i>',`функциональные зоны – <a href="${GPL}" target="_blank" rel="noopener">легенда</a>`)+`<div style="color:var(--muted);font-size:10.5px">${gpSrc||'загрузка…'}; покрывает центральную часть ГО</div>`;
@@ -1031,7 +1034,7 @@ const bmh=document.getElementById('bm');
 function setBM(k){for(const kk in BM){const l=BM[kk][1];if(l&&map.hasLayer(l))map.removeLayer(l)}const l=BM[k][1];if(l){l.addTo(map);l.bringToBack&&l.bringToBack()}bmCur=k;bmh.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.k===k)));lineCol();legend()}
 for(const k in BM){const b=document.createElement('button');b.className='chip';b.type='button';b.dataset.k=k;b.id='bm-'+k;b.textContent=BM[k][0];b.onclick=()=>setBM(k);bmh.appendChild(b)}
 const tg=document.getElementById('tg');
-chip(tg,'t-pp','Проект «Шабровские карьеры»',true,tog(pp));chip(tg,'t-rn','Границы районов',true,tog(rn));chip(tg,'t-szz','СЗЗ 500 м',false,tog(szz));chip(tg,'t-ret','Окна в прошлое (5 объектов)',true,tog(retLayer));chip(tg,'t-retro','Ретро-снимок ~2014–2015',false,v=>{tog(retro)(v);document.getElementById('swc').hidden=!v;swClip()});
+chip(tg,'t-pp','Проект «Шабровские карьеры»',false,tog(pp));chip(tg,'t-rel','Рельеф (отмывка)',false,tog(relief));chip(tg,'t-rn','Границы районов',true,tog(rn));chip(tg,'t-szz','СЗЗ 500 м',false,tog(szz));chip(tg,'t-ret','Окна в прошлое (5 объектов)',true,tog(retLayer));chip(tg,'t-retro','Ретро-снимок ~2014–2015',false,v=>{tog(retro)(v);document.getElementById('swc').hidden=!v;swClip()});
 {const w=document.createElement('label');w.id='swc';w.hidden=true;w.className='gpop';w.innerHTML='<input type="checkbox" id="swcb" style="flex:none"> шторка сравнения с современным снимком';tg.after(w);
  w.querySelector('input').onchange=e=>{swipeOn=e.target.checked;swClip()}}
 chip(tg,'t-gp','Генплан: функциональные зоны',false,v=>{tog(gp)(v);document.getElementById('gpop').hidden=!v});
