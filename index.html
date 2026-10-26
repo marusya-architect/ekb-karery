@@ -749,6 +749,7 @@ h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
 #lbx img{max-width:100%;max-height:calc(100% - 50px);border-radius:4px;background:#fff}#lbx p{color:#fff;margin:0;font-size:13px;text-align:center}
 #lbx button{position:absolute;top:10px;right:14px;font-size:22px;background:none;border:0;color:#fff;cursor:pointer}
 .rmk{font-size:15px;line-height:1;background:#fff;border:1.5px solid #333;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.leaflet-popup-content{max-height:min(62vh,600px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding-right:4px}
 /* матрица */
 .mx{background:color-mix(in srgb,var(--panel) 96%,transparent);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:11px;line-height:1.3;width:min(560px,calc(100vw - 440px));max-height:calc(100vh - 40px);overflow:auto;box-shadow:0 1px 4px rgba(0,0,0,.15)}
 .mx.cl{width:auto}
@@ -804,8 +805,8 @@ h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
  <section><h2>Очередь ревитализации карьеров и отвалов</h2><div class="q" id="q"></div></section>
  <section><h2>Очередь ликвидации свалок и полигонов ТБО</h2><div class="q" id="qs"></div></section>
  <section><h2>Класс объектов</h2><div class="toggles cls" id="cls"></div></section>
- <section><h2>Сценарий по матрице выбора (статья 1)</h2><div class="q" id="sc"></div>
-  <label class="stopf"><input type="checkbox" id="nostop"> скрыть объекты с выявленными стоп-факторами (статья 2)</label></section>
+ <section><h2>Сценарий по матрице выбора</h2><div class="q" id="sc"></div>
+  <label class="stopf"><input type="checkbox" id="nostop"> скрыть объекты с выявленными стоп-факторами</label></section>
  <section><h2>Раскраска объектов</h2><div class="toggles seg" id="cm"></div></section>
  <section><h2>Подложка</h2><div class="toggles seg" id="bm"></div></section>
  <section><h2>Слои</h2><div class="toggles" id="tg"></div></section>
@@ -830,6 +831,7 @@ const RET=[{"ids": [52, 73, 74], "t": "\u0428\u0430\u0440\u0442\u0430\u0448\u044
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const Q=[['I очередь (2026–2030)','--q1','--d1'],['II очередь (2031–2037)','--q2','--d2'],['III очередь (2038–2045)','--q3','--d3'],['вне очереди','--muted','--d0']];
 const qi=q=>{const i=Q.findIndex(x=>x[0]===q);return i<0?3:i};
+L.Popup.mergeOptions({autoPanPaddingTopLeft:L.point(10,56),autoPanPaddingBottomRight:L.point(10,30)});
 const map=L.map('map',{zoomSnap:.5,minZoom:9,maxZoom:17,attributionControl:true});
 map.attributionControl.setPrefix(false).addAttribution('© Esri, Maxar · © участники OpenStreetMap');
 // --- подложки
@@ -901,13 +903,13 @@ const scKey=p=>p.typ+p.dir, scCol=p=>(SC.find(x=>x[0]===scKey(p))||[0,0,'#999'])
 let cm='q';
 const colOf=o=>cm==='sc'?scCol(o.p):css(Q[qi(o.q)][o.sq?2:1]);
 function pop(o){const p=o.p,c=colOf(o);let h=`<div class="pop"><h3>№ ${o.n}. ${p.имя||'без названия'}</h3><span class="pill${o.sq&&qi(o.q)<2?' dk':''}" style="background:${c}">${o.sq?(o.q==='вне очереди'?'вне очереди (не связана с карьером)':'ликвидация: '+o.q):o.q}</span><table>`;for(const k in LAB){const v=fmt(k,p[k]);if(v!==null&&!(o.sq&&k==='класс'))h+=`<tr><td>${LAB[k]}</td><td>${v}</td></tr>`}h+='</table>';
- if(p.typ){h+=`<div class="sec"><b>Матрица выбора сценария (статья 1)</b><span class="sct" style="background:${scCol(p)}">${p.typ}${p.dir==='−'?'−':'+'}</span>${(SC.find(x=>x[0]===scKey(p))||[0,''])[1]}<br><span class="crit">П ${p.mP} · ИГ ${p.mIG} · Т ${p.mT} · Л ${p.mL} · И ${p.mI}</span> – ${p.exact?'совпадает со строкой '+p.row+' матрицы':'ближайшая строка '+p.row+', сочетание требует дополнительного обоснования'}<br><small>положение: ${p.pos}</small></div>`;
-  h+=`<div class="sec"><b>Стоп-факторы (статья 2)</b>${p.stops.length?'<ul>'+p.stops.map(([l,t])=>`<li class="${l==='red'?'red':'amb'}">${l==='red'?'⛔':'⚠'} ${t}</li>`).join('')+'</ul>':'не выявлены'}</div>`;
+ if(p.typ){h+=`<div class="sec"><b>Матрица выбора сценария</b><span class="sct" style="background:${scCol(p)}">${p.typ}${p.dir==='−'?'−':'+'}</span>${(SC.find(x=>x[0]===scKey(p))||[0,''])[1]}<br><span class="crit">П ${p.mP} · ИГ ${p.mIG} · Т ${p.mT} · Л ${p.mL} · И ${p.mI}</span> – ${p.exact?'совпадает со строкой '+p.row+' матрицы':'ближайшая строка '+p.row+', сочетание требует дополнительного обоснования'}<br><small>положение: ${p.pos}</small></div>`;
+  h+=`<div class="sec"><b>Стоп-факторы</b>${p.stops.length?'<ul>'+p.stops.map(([l,t])=>`<li class="${l==='red'?'red':'amb'}">${l==='red'?'⛔':'⚠'} ${t}</li>`).join('')+'</ul>':'не выявлены'}</div>`;
   const z=p.szz||{},nn=a=>a.map(i=>'№ '+byId[i].n).join(', ');
   h+=`<div class="sec"><b>СЗЗ ориентировочная, 500 м (СанПиН 2.2.1/2.1.1.1200-03)</b>${z.own?`объект формирует СЗЗ (${z.own==='ТБО'?'полигон ТБО / свалка':'действующий карьер / отвал'}): жилых домов в ней – ${z.res}${z.soc?', школ, детсадов, больниц – '+z.soc:''}<br>`:''}${z.inT&&z.inT.length?'попадает в СЗЗ свалок: '+nn(z.inT)+'<br>':''}${z.inQ&&z.inQ.length?'попадает в СЗЗ действующих карьеров / отвалов: '+nn(z.inQ):''}${!z.own&&!(z.inT||[]).length&&!(z.inQ||[]).length?'вне СЗЗ':''}</div>`;
   if(p.fz)h+=`<div class="sec"><b>Функциональная зона генплана</b>${p.fz} – ${p.fzn}<br>${p.fzok?'<span style="color:#1a7f37">✓ совместима со сценарием '+p.typ+p.dir+'</span>':'<span class="amb">⚠ не совместима со сценарием '+p.typ+p.dir+' – нужны изменения в генплан</span>'}</div>`;
   if(retOf[p._id]!==undefined){const R=RET[retOf[p._id]];h+=`<div class="sec"><b>Ретроспектива (Esri World Imagery Wayback)</b><img class="rth" src="${R.img}" alt="${R.t}" onclick="lbx(${retOf[p._id]})"><small>${R.t} – нажмите, чтобы увеличить</small></div>`}
-  h+=`<div class="sec"><b>Сценарий (статья 2)</b>целевой: ${p.target}<br>допустимо сейчас: <i>${p.now}</i></div>`}
+  h+=`<div class="sec"><b>Сценарий использования</b>целевой: ${p.target}<br>допустимо сейчас: <i>${p.now}</i></div>`}
  return h+'</div>'}
 const byId={};objs.forEach(o=>byId[o.p._id]=o);
 map.createPane('szzP').style.zIndex=405;map.getPane('szzP').style.pointerEvents='none';
@@ -939,7 +941,7 @@ function poiZoom(){poiLab.clearLayers();const z=map.getZoom();if(z<13)return;con
  for(const p of POI){if(p.pr>maxPr||!bb.contains(p.ll))continue;const pt=map.latLngToContainerPoint(p.ll),w=Math.min(p.n.length,40)*6+12,r=[pt.x-6,pt.y-8,pt.x+w,pt.y+8];
   if(boxes.some(b=>!(r[2]<b[0]||r[0]>b[2]||r[3]<b[1]||r[1]>b[3])))continue;boxes.push(r);poiLab.addLayer(p.m)}}
 map.on('moveend',()=>{if(map.hasLayer(poiLab))poiZoom()});
-// --- матрица выбора сценария (статья 1)
+// --- матрица выбора сценария
 const MX=[['Центральное или срединное положение в структуре населённого пункта','1','3','1/2','3','+','А'],
 ['Срединное или примыкающее к застроенной территории','2/3','3','2/3','3','+','Б'],
 ['Срединное, примыкающее или периферийное, но функционально связанное с застройкой','2/3','3/2','3','2','+','В'],
@@ -952,7 +954,7 @@ let mxOpen=innerWidth>760,mxRow=0;
 const Mc=L.control({position:'topright'});
 Mc.onAdd=()=>{const d=L.DomUtil.create('div','mx');d.id='mx';L.DomEvent.disableClickPropagation(d);L.DomEvent.disableScrollPropagation(d);return d};Mc.addTo(map);
 function mxDraw(){const d=document.getElementById('mx');d.classList.toggle('cl',!mxOpen);
- let h=`<div class="lgh"><b>Матрица выбора сценария (статья 1)</b><button type="button" class="lgb" id="mxb" aria-expanded="${mxOpen}" title="${mxOpen?'Свернуть':'Развернуть'}">${mxOpen?'▴':'▾'}</button></div>`;
+ let h=`<div class="lgh"><b>Матрица выбора сценария</b><button type="button" class="lgb" id="mxb" aria-expanded="${mxOpen}" title="${mxOpen?'Свернуть':'Развернуть'}">${mxOpen?'▴':'▾'}</button></div>`;
  if(mxOpen){h+='<table><tr><th>Положение в системе расселения</th><th>ИГ</th><th>Т</th><th>Л</th><th>И</th><th>Напр.</th><th>Тип</th><th>Объектов</th></tr>';
   MX.forEach((r,i)=>{const k=r[6]+r[5],n=objs.filter(o=>o.p.row===i+1).length;h+=`<tr${mxRow===i+1?' class="hl"':''}><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td><span class="sct" style="background:${(SC.find(x=>x[0]===k)||[0,0,'#999'])[2]}">${r[6]}</span></td><td>${n||''}</td></tr>`});
   h+=`</table><div class="nt"><p><b>Тип:</b> А – жилой; Б – общественно-деловой, туристический и спортивно-общественный; В – рекреационный; Г – промышленный и коммунально-складской; Д – иные варианты, не сводимые к А–Г (как в градостроительной, так и в неградостроительной рекультивации).</p>
@@ -970,7 +972,7 @@ map.on('popupopen',e=>{const o=objs.find(o=>o.mk===e.popup._source||(o.poly&&o.p
  setTimeout(()=>{const c=e.popup.getElement(),m=document.getElementById('mx');if(!c||!mxOpen)return;const a=c.getBoundingClientRect(),b=m.getBoundingClientRect();
   if(a.right>b.left-8&&a.top<b.bottom){const dx=a.right-(b.left-12),ml=map.getContainer().getBoundingClientRect().left;if(a.left-dx>ml+8)map.panBy([dx,0]);else{mxOpen=false;mxDraw()}}},260)});
 map.on('popupclose',()=>{mxRow=0;mxDraw();document.getElementById('swipe').style.visibility=''});
-map.on('popupopen',()=>{document.getElementById('swipe').style.visibility='hidden'});
+map.on('popupopen',e=>{document.getElementById('swipe').style.visibility='hidden';const c=e.popup.getElement()&&e.popup.getElement().querySelector('.leaflet-popup-content');if(c){c.style.maxHeight=Math.max(160,Math.min(600,map.getSize().y-(innerWidth<=760?150:110)))+'px';e.popup.update()}});
 // --- условные обозначения
 const Lg=L.control({position:'bottomleft'});
 Lg.onAdd=()=>{const d=L.DomUtil.create('div','legend');L.DomEvent.disableClickPropagation(d);L.DomEvent.disableScrollPropagation(d);d.id='legend';return d};
@@ -980,7 +982,7 @@ let legOpen=innerWidth>760&&innerHeight>700;
 function legend(){const lg=document.getElementById('legend');if(!lg||typeof flt==='undefined')return;const r=(i,t)=>`<div class="lg">${i}<span>${t}</span></div>`;
  let h=`<div class="lgh"><b>Условные обозначения</b><button type="button" class="lgb" id="lgb" aria-expanded="${legOpen}" title="${legOpen?'Свернуть':'Развернуть'}">${legOpen?'▾':'▸'}</button></div><div class="lgbody"${legOpen?'':' hidden'}>`;
  const qs=Q.filter(([q])=>flt.qs.has(q));
- if(cm==='sc'){const ss=SC.filter(x=>flt.sc.has(x[0]));if(ss.length)h+='<h4>Сценарий по матрице (статья 1)</h4>'+ss.map(([k,t,c])=>r(`<i class="c" style="background:${c}"></i>`,t)).join('')+r('<i class="s" style="background:#ccc"></i>','квадрат – свалка / полигон ТБО');}
+ if(cm==='sc'){const ss=SC.filter(x=>flt.sc.has(x[0]));if(ss.length)h+='<h4>Сценарий по матрице</h4>'+ss.map(([k,t,c])=>r(`<i class="c" style="background:${c}"></i>`,t)).join('')+r('<i class="s" style="background:#ccc"></i>','квадрат – свалка / полигон ТБО');}
  else if(flt.c.has('карьер')||flt.c.has('отвал')){const qq=Q.slice(0,3).filter(([q])=>flt.q.has(q));if(qq.length){const t=[flt.c.has('карьер')?'карьеры':'',flt.c.has('отвал')?'отвалы':''].filter(Boolean).join(' и ');h+=`<h4>${t[0].toUpperCase()+t.slice(1)} – очередь ревитализации</h4>`+qq.map(([q,v])=>r(`<i class="c" style="background:var(${v})"></i>`,q)).join('')}}
  if(cm!=='sc'&&flt.c.has('свалка')&&qs.length)h+='<h4>Свалки и полигоны ТБО – очередь ликвидации</h4>'+qs.map(([q,,v])=>r(`<i class="s" style="background:var(${v})"></i>`,q==='вне очереди'?'вне очереди (> 500 м от карьера)':q)).join('');
  if(map.hasLayer(numLayer))h+=r('<i class="nn">12</i>','номер объекта (как в списке)');
