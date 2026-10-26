@@ -682,7 +682,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 html,body{height:100%;margin:0}
 [hidden]{display:none!important}
 body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.4}
-#app{display:flex;height:100%;padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}
+#app{position:relative;display:flex;height:100%;padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}
 #side{width:350px;flex:none;overflow:auto;background:var(--panel);border-right:1px solid var(--line);padding-block:18px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:16px;display:flex;flex-direction:column;gap:16px;min-width:0}
 #side>*{flex:none}
 #map{flex:1;min-width:0;background:var(--bg)}
@@ -732,7 +732,12 @@ h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
 .leaflet-bar a{background:var(--panel);color:var(--fg);border-color:var(--line)}
 /* условные обозначения */
 .legend{background:color-mix(in srgb,var(--panel) 94%,transparent);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:11.5px;line-height:1.3;max-width:250px;max-height:calc(100vh - 140px);overflow:auto;box-shadow:0 1px 4px rgba(0,0,0,.15)}
-.legend summary{cursor:pointer;font-weight:600;font-size:12px;list-style:none}
+.lgh{display:flex;align-items:center;justify-content:space-between;gap:10px}.lgh b{font-size:12px}
+.lgb{border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:6px;width:24px;height:22px;font-size:13px;line-height:1;cursor:pointer;padding:0}
+.lg .nn{font:600 10px/1 var(--f-mono);color:#111;font-style:normal;text-shadow:0 0 2px #fff}.lg .tx{font:600 10px/1 var(--f-body);font-style:normal;color:#333}.lg .pd{width:7px;height:7px;border-radius:50%;background:#7a4b1e;border:1px solid #fff}
+#stog{position:absolute;z-index:1000;top:50%;left:350px;transform:translateY(-50%);width:20px;height:56px;border:1px solid var(--line);border-left:0;border-radius:0 8px 8px 0;background:var(--panel);color:var(--fg);cursor:pointer;font-size:13px;padding:0;box-shadow:2px 0 4px rgba(0,0,0,.12)}
+#app.collapsed #side{display:none}#app.collapsed #stog{left:0}
+#stog:focus-visible,.lgb:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .legend summary::-webkit-details-marker{display:none}
 .legend summary::after{content:" ▾";color:var(--muted)}
 .legend details:not([open]) summary::after{content:" ▸"}
@@ -753,7 +758,7 @@ h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
 .tl.poi{transform:translate(-4px,-50%);text-align:left;font:500 10.5px/1.1 var(--f-body);color:#3b2f22;text-shadow:0 0 2px #fff,0 0 2px #fff,0 0 3px #fff}
 .tl.poi b{display:inline-block;width:6px;height:6px;border-radius:50%;background:#7a4b1e;border:1px solid #fff;margin-right:3px;vertical-align:1px}
 .sqm{width:10px;height:10px;border:1.2px solid #222;border-radius:2px;box-sizing:border-box}
-@media (max-width:760px){#app{flex-direction:column}#side{width:auto;height:44%;border-right:0;border-bottom:1px solid var(--line);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}.legend{max-width:200px;max-height:40vh}}
+@media (max-width:760px){#stog{top:44%;left:50%;transform:translate(-50%,-1px);width:56px;height:20px;border:1px solid var(--line);border-top:0;border-radius:0 0 8px 8px}#app.collapsed #stog{top:0;left:50%}#app{flex-direction:column}#side{width:auto;height:44%;border-right:0;border-bottom:1px solid var(--line);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}.legend{max-width:200px;max-height:40vh}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -763,7 +768,6 @@ h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
  <div>
   <div class="eyebrow">ГО «город Екатеринбург» · реестр нарушенных территорий</div>
   <h1>Карьеры, отвалы и свалки: очередность ревитализации до 2045 г.</h1>
-  <p class="lead">Прототип ТИС к курсовому проекту по сквозным цифровым технологиям (Ивановская М.Ю., НИУ МГСУ, 2026). Номера на карте совпадают с номерами в списке. Галочки фильтруют карту и список одновременно.</p>
  </div>
  <div class="kpi" id="kpi"></div>
  <section><h2>Очередность</h2><div class="q" id="q"></div></section>
@@ -775,6 +779,7 @@ h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
   <div class="list" id="list"></div></section>
  <p class="note">№ 1–57 – карьеры в порядке ранга (интегральный индекс атрибутов 0–1), № 58–80 – отвалы, № 81–119 – свалки и полигоны ТБО. Данные: авторская база нарушенных территорий (ВКР), © участники OpenStreetMap (ODbL) – в т. ч. условная карта (NextGIS, 2026), реестр лицензий на пользование недрами. Космоснимок: © Esri World Imagery (Maxar, Earthstar Geographics). Атрибуты требуют проверки по НСПД.</p>
 </aside>
+<button type="button" id="stog" aria-controls="side" aria-expanded="true" title="Свернуть панель">◀</button>
 <div id="map" role="region" aria-label="Карта нарушенных территорий"></div>
 </div>
 <script>/* @preserve
@@ -807,9 +812,11 @@ const schem=new Schem({maxZoom:17,minZoom:9,attribution:''});
 const BM={sat:['Космоснимок',sat],sch:['Условная карта',schem],none:['Без подложки',null]};
 let bmCur='sat';
 // --- граница и районы
-const go=L.geoJSON(D.go,{style:{color:'#ffffff',weight:2.5,dashArray:'8 5',fill:false},interactive:false}).addTo(map);
-const rn=L.geoJSON(D.rn,{style:{color:'#ffffff',weight:.9,opacity:.75,fill:false},onEachFeature:(f,l)=>l.bindTooltip(f.properties.name||'',{sticky:true})}).addTo(map);
-function lineCol(){const dark=bmCur!=='sat';go.setStyle({color:dark?'#3a3a3a':'#ffffff'});rn.setStyle({color:dark?'#6b6b6b':'#ffffff'})}
+const goHalo=L.geoJSON(D.go,{style:{color:'#ffffff',weight:5,opacity:.55,fill:false},interactive:false}).addTo(map);
+const go=L.geoJSON(D.go,{style:{color:'#d62728',weight:2.5,dashArray:'10 6',fill:false},interactive:false}).addTo(map);
+const rn=L.geoJSON(D.rn,{style:{color:'#ef6a74',weight:1.2,opacity:.9,fill:false},onEachFeature:(f,l)=>l.bindTooltip(f.properties.name||'',{sticky:true})}).addTo(map);
+function lineCol(){const z=map.getZoom()||10,w=2+0.6*Math.max(0,z-9);go.setStyle({weight:w,dashArray:`${Math.round(w*4)} ${Math.round(w*2.4)}`});goHalo.setStyle({weight:w+3});rn.setStyle({weight:0.9+0.35*Math.max(0,z-9)})}
+map.on('zoomend',lineCol);
 // --- объекты
 const fmt=(k,v)=>{if(v==null||v==='')return null;if(typeof v==='number'){if(k.includes('га'))return v.toLocaleString('ru-RU',{maximumFractionDigits:2})+' га';if(k.endsWith('_м'))return Math.round(v).toLocaleString('ru-RU')+' м'}return v};
 const LAB={класс:'Класс',тип:'Тип',состояние:'Состояние',ландшафт:'Ландшафт',площадь_расч_га:'Площадь',глубина_м:'Глубина',до_жилья_м:'До жилья',до_остановки_м:'До остановки',до_карьера_м:'До карьера',связь_с_карьером:'Связь с карьером',район:'Район',категория:'Категория',ранг:'Ранг (из 57)',недропользователь_лиц:'Недропользователь',лицензия:'Лицензия'};
@@ -852,14 +859,19 @@ const Lg=L.control({position:'bottomleft'});
 Lg.onAdd=()=>{const d=L.DomUtil.create('div','legend');L.DomEvent.disableClickPropagation(d);L.DomEvent.disableScrollPropagation(d);d.id='legend';return d};
 L.control.scale({imperial:false,position:'bottomleft'}).addTo(map);
 Lg.addTo(map);
-function legend(){const r=(i,t)=>`<div class="lg">${i}<span>${t}</span></div>`;
- let h=`<details ${innerWidth>760&&innerHeight>700?'open':''}><summary>Условные обозначения</summary>`;
- h+='<h4>Карьеры и отвалы – очередь ревитализации</h4>'+Q.slice(0,3).map(([q,v])=>r(`<i class="c" style="background:var(${v})"></i>`,q)).join('');
- h+='<h4>Свалки и полигоны ТБО – очередь ликвидации</h4>'+Q.map(([q,,v])=>r(`<i class="s" style="background:var(${v})"></i>`,q==='вне очереди'?'вне очереди (> 500 м от карьера)':q)).join('');
- h+='<h4>Границы</h4>'+r(`<i class="ln" style="border-color:${bmCur==='sat'?'#888':'#3a3a3a'};border-top-style:dashed"></i>`,'граница ГО')+r(`<i class="ln" style="border-color:#9a9a9a;border-top-width:1px"></i>`,'границы районов');
- h+='<h4>Проект «Шабровские карьеры»</h4>'+['граница_пилотной_площадки','зона_ограничения_доступа_30м','входная_зона','зона_музеефикации','зона_регулируемой_водной_рекреации','рекультивация_отвала','экотропа'].map(k=>r(k==='экотропа'||k==='граница_пилотной_площадки'?`<i class="ln" style="border-color:${PPCol(k)}${k==='граница_пилотной_площадки'?';border-top-style:dashed':''}"></i>`:`<i class="ar" style="background:${PPCol(k)};opacity:.8"></i>`,PPN[k].replace(' (буфер 500 м)',''))).join('');
+let legOpen=innerWidth>760&&innerHeight>700;
+function legend(){const lg=document.getElementById('legend');if(!lg||typeof flt==='undefined')return;const r=(i,t)=>`<div class="lg">${i}<span>${t}</span></div>`;
+ let h=`<div class="lgh"><b>Условные обозначения</b><button type="button" class="lgb" id="lgb" aria-expanded="${legOpen}" title="${legOpen?'Свернуть':'Развернуть'}">${legOpen?'▾':'▸'}</button></div><div class="lgbody"${legOpen?'':' hidden'}>`;
+ const qs=Q.filter(([q])=>flt.q.has(q));
+ if(flt.c.has('карьер')||flt.c.has('отвал')){const qq=qs.filter(([q])=>q!=='вне очереди');if(qq.length){const t=[flt.c.has('карьер')?'карьеры':'',flt.c.has('отвал')?'отвалы':''].filter(Boolean).join(' и ');h+=`<h4>${t[0].toUpperCase()+t.slice(1)} – очередь ревитализации</h4>`+qq.map(([q,v])=>r(`<i class="c" style="background:var(${v})"></i>`,q)).join('')}}
+ if(flt.c.has('свалка')&&qs.length)h+='<h4>Свалки и полигоны ТБО – очередь ликвидации</h4>'+qs.map(([q,,v])=>r(`<i class="s" style="background:var(${v})"></i>`,q==='вне очереди'?'вне очереди (> 500 м от карьера)':q)).join('');
+ if(map.hasLayer(numLayer))h+=r('<i class="nn">12</i>','номер объекта (как в списке)');
+ h+='<h4>Границы</h4>'+r('<i class="ln" style="border-color:#d62728;border-top-style:dashed;border-top-width:3px"></i>','граница ГО')+(map.hasLayer(rn)?r('<i class="ln" style="border-color:#ef6a74;border-top-width:1.5px"></i>','границы районов'):'');
+ if(map.hasLayer(pp))h+='<h4>Проект «Шабровские карьеры»</h4>'+['граница_пилотной_площадки','зона_ограничения_доступа_30м','входная_зона','зона_музеефикации','зона_регулируемой_водной_рекреации','рекультивация_отвала','экотропа','смотровые_площадки'].map(k=>r(k==='экотропа'||k==='граница_пилотной_площадки'?`<i class="ln" style="border-color:${PPCol(k)}${k==='граница_пилотной_площадки'?';border-top-style:dashed':''}"></i>`:k==='смотровые_площадки'?'<i class="c" style="background:#fff"></i>':`<i class="ar" style="background:${PPCol(k)};opacity:.8"></i>`,PPN[k].replace(' (буфер 500 м)',''))).join('');
+ const sub=[];if(map.hasLayer(rnLab))sub.push(r('<i class="tx">Аб</i>','районы и посёлки'));if(map.hasLayer(poiLab))sub.push(r('<i class="pd"></i>','важные здания (с приближением)'));if(sub.length)h+='<h4>Подписи</h4>'+sub.join('');
  if(bmCur==='sch')h+='<h4>Условная карта</h4>'+r('<i class="ar" style="background:#d6cdc0;border:1px solid #baac9e"></i>','здания')+r('<i class="ln" style="border-color:#e8924a;border-top-width:4px"></i>','магистрали')+r('<i class="ln" style="border-color:#f6c460;border-top-width:3px"></i>','главные улицы')+r('<i class="ln" style="border-color:#b4aea6;border-top-width:2px"></i>','улицы и проезды')+r('<i class="ln" style="border-color:#828282;border-top-width:2px"></i>','железные дороги')+r('<i class="ar" style="background:#a6c9e2"></i>','водоёмы')+r('<i class="ar" style="background:#d6e5c8"></i>','леса')+r('<i class="ar" style="background:#c8e2b4"></i>','парки, скверы');
- const lg=document.getElementById('legend');const was=lg.querySelector('details');const open=was?was.open:null;lg.innerHTML=h+'</details>';if(open!==null)lg.querySelector('details').open=open}
+ if(bmCur==='sat')h+='<h4>Подложка</h4>'+r('<i class="ar" style="background:linear-gradient(135deg,#3d5a2e,#6b7d55)"></i>','космоснимок © Esri');
+ lg.innerHTML=h+'</div>';document.getElementById('lgb').onclick=()=>{legOpen=!legOpen;legend()}}
 // --- панель
 const FO=objs.filter(o=>o.kind!=='свалка'),sum=a=>a.reduce((s,o)=>s+(+o.p.площадь_расч_га||0),0),tot=sum(objs);
 const near=objs.filter(o=>o.sq&&o.q!=='вне очереди').length;
@@ -871,7 +883,7 @@ objs.forEach(o=>{const p=o.p,b=document.createElement('button');b.className='ite
  b.onclick=()=>{const bb=o.poly?o.poly.getBounds():L.latLngBounds([o.mk.getLatLng(),o.mk.getLatLng()]);map.fitBounds(bb.pad(1.5),{maxZoom:15});o.mk.openPopup()};
  o.btn=b;list.appendChild(b)});
 let showNum=true;
-function apply(){let n=0,a=0;objs.forEach(o=>{const on=flt.q.has(o.q)&&flt.c.has(o.kind);o.btn.hidden=!on;if(on){n++;a+=+o.p.площадь_расч_га||0;objLayer.addLayer(o.g);numLayer.addLayer(o.nl)}else{objLayer.removeLayer(o.g);numLayer.removeLayer(o.nl)}});cnt.textContent=`показано ${n} из ${objs.length} · ${a.toLocaleString('ru-RU',{maximumFractionDigits:1})} га`}
+function apply(){let n=0,a=0;objs.forEach(o=>{const on=flt.q.has(o.q)&&flt.c.has(o.kind);o.btn.hidden=!on;if(on){n++;a+=+o.p.площадь_расч_га||0;objLayer.addLayer(o.g);numLayer.addLayer(o.nl)}else{objLayer.removeLayer(o.g);numLayer.removeLayer(o.nl)}});legend();cnt.textContent=`показано ${n} из ${objs.length} · ${a.toLocaleString('ru-RU',{maximumFractionDigits:1})} га`}
 const qd=document.getElementById('q');
 Q.forEach(([q,v,dv],i)=>{const g=objs.filter(o=>o.q===q),a=sum(g),nk=g.filter(o=>!o.sq).length,ns=g.filter(o=>o.sq).length;const el=document.createElement('label');
  el.innerHTML=`<input type="checkbox" id="q${i}" checked><span class="sws">${i<3?`<span class="sw" style="background:var(${v})"></span>`:'<span style="width:12px"></span>'}<span class="sw sq" style="background:var(${dv})"></span></span><span>${q}</span><span class="num">${nk?nk+'+':''}${ns} св.</span><span class="num">${Math.round(a)} га</span>`;
@@ -879,7 +891,7 @@ Q.forEach(([q,v,dv],i)=>{const g=objs.filter(o=>o.q===q),a=sum(g),nk=g.filter(o=
 const cl=document.getElementById('cls');
 [['карьер','Карьеры (57)'],['отвал','Отвалы (23)'],['свалка','Свалки и ТБО (39)']].forEach(([c,n],i)=>{const el=document.createElement('label');el.innerHTML=`<input type="checkbox" id="c${i}" checked> ${n}`;el.querySelector('input').onchange=e=>{e.target.checked?flt.c.add(c):flt.c.delete(c);apply()};cl.appendChild(el)});
 function chip(host,id,name,on,fn){const b=document.createElement('button');b.className='chip';b.id=id;b.type='button';b.textContent=name;b.setAttribute('aria-pressed',String(on));b.onclick=()=>{const v=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',String(v));fn(v)};host.appendChild(b);return b}
-const tog=l=>v=>v?l.addTo(map):map.removeLayer(l);
+const tog=l=>v=>{v?l.addTo(map):map.removeLayer(l);legend()};
 const bmh=document.getElementById('bm');
 function setBM(k){for(const kk in BM){const l=BM[kk][1];if(l&&map.hasLayer(l))map.removeLayer(l)}const l=BM[k][1];if(l){l.addTo(map);l.bringToBack&&l.bringToBack()}bmCur=k;bmh.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.k===k)));lineCol();legend()}
 for(const k in BM){const b=document.createElement('button');b.className='chip';b.type='button';b.dataset.k=k;b.id='bm-'+k;b.textContent=BM[k][0];b.onclick=()=>setBM(k);bmh.appendChild(b)}
@@ -890,7 +902,10 @@ chip(lb,'l-num','Номера объектов',true,tog(numLayer));
 chip(lb,'l-rn','Районы и посёлки',true,tog(rnLab));
 chip(lb,'l-poi','Важные здания',true,v=>{tog(poiLab)(v);if(v)poiZoom()});
 numLayer.addTo(map);rnLab.addTo(map);poiLab.addTo(map);
-apply();setBM('sat');map.fitBounds(go.getBounds(),{padding:[12,12]});poiZoom();
+const app=document.getElementById('app'),stog=document.getElementById('stog');
+const arrow=()=>{const c=app.classList.contains('collapsed'),m=innerWidth<=760;stog.textContent=m?(c?'▼':'▲'):(c?'▶':'◀');stog.title=c?'Развернуть панель':'Свернуть панель';stog.setAttribute('aria-expanded',String(!c))};
+stog.onclick=()=>{app.classList.toggle('collapsed');arrow();setTimeout(()=>map.invalidateSize(),50)};addEventListener('resize',arrow);arrow();
+apply();setBM('sat');lineCol();map.fitBounds(go.getBounds(),{padding:[12,12]});poiZoom();
 </script>
 
 </body>
