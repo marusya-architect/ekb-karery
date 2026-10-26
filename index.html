@@ -683,7 +683,7 @@ html,body{height:100%;margin:0}
 [hidden]{display:none!important}
 body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.4}
 #app{position:relative;display:flex;height:100%;padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}
-#side{width:350px;flex:none;overflow:auto;background:var(--panel);border-right:1px solid var(--line);padding-block:18px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:16px;display:flex;flex-direction:column;gap:16px;min-width:0}
+#side{width:370px;box-sizing:border-box;flex:none;overflow:auto;background:var(--panel);border-right:1px solid var(--line);padding-block:18px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:16px;display:flex;flex-direction:column;gap:16px;min-width:0}
 #side>*{flex:none}
 #map{flex:1;min-width:0;background:var(--bg)}
 .eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
@@ -695,7 +695,7 @@ h1{font-size:20px;line-height:1.2;margin:4px 0 6px;text-wrap:balance;font-weight
 .kpi span{font-size:12px;color:var(--muted)}
 h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px;font-weight:600}
 .q{display:grid;gap:4px}
-.q label{display:grid;grid-template-columns:auto 26px 1fr auto auto;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:3px 0}
+.q label{display:grid;grid-template-columns:auto 14px 1fr auto auto;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:3px 0}
 .sws{display:flex;gap:2px}
 .sw{width:12px;height:12px;border-radius:50%;border:1px solid rgba(0,0,0,.35)}
 .sw.sq{border-radius:2px}
@@ -735,7 +735,7 @@ h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
 .lgh{display:flex;align-items:center;justify-content:space-between;gap:10px}.lgh b{font-size:12px}
 .lgb{border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:6px;width:24px;height:22px;font-size:13px;line-height:1;cursor:pointer;padding:0}
 .lg .nn{font:600 10px/1 var(--f-mono);color:#111;font-style:normal;text-shadow:0 0 2px #fff}.lg .tx{font:600 10px/1 var(--f-body);font-style:normal;color:#333}.lg .pd{width:7px;height:7px;border-radius:50%;background:#7a4b1e;border:1px solid #fff}
-#stog{position:absolute;z-index:1000;top:50%;left:350px;transform:translateY(-50%);width:20px;height:56px;border:1px solid var(--line);border-left:0;border-radius:0 8px 8px 0;background:var(--panel);color:var(--fg);cursor:pointer;font-size:13px;padding:0;box-shadow:2px 0 4px rgba(0,0,0,.12)}
+#stog{position:absolute;z-index:1000;top:50%;left:370px;transform:translateY(-50%);width:20px;height:56px;border:1px solid var(--line);border-left:0;border-radius:0 8px 8px 0;background:var(--panel);color:var(--fg);cursor:pointer;font-size:13px;padding:0;box-shadow:2px 0 4px rgba(0,0,0,.12)}
 #app.collapsed #side{display:none}#app.collapsed #stog{left:0}
 #stog:focus-visible,.lgb:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .legend summary::-webkit-details-marker{display:none}
@@ -770,7 +770,8 @@ h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
   <h1>Карьеры, отвалы и свалки: очередность ревитализации до 2045 г.</h1>
  </div>
  <div class="kpi" id="kpi"></div>
- <section><h2>Очередность</h2><div class="q" id="q"></div></section>
+ <section><h2>Очередь ревитализации карьеров и отвалов</h2><div class="q" id="q"></div></section>
+ <section><h2>Очередь ликвидации свалок и полигонов ТБО</h2><div class="q" id="qs"></div></section>
  <section><h2>Класс объектов</h2><div class="toggles cls" id="cls"></div></section>
  <section><h2>Подложка</h2><div class="toggles seg" id="bm"></div></section>
  <section><h2>Слои</h2><div class="toggles" id="tg"></div></section>
@@ -862,8 +863,8 @@ Lg.addTo(map);
 let legOpen=innerWidth>760&&innerHeight>700;
 function legend(){const lg=document.getElementById('legend');if(!lg||typeof flt==='undefined')return;const r=(i,t)=>`<div class="lg">${i}<span>${t}</span></div>`;
  let h=`<div class="lgh"><b>Условные обозначения</b><button type="button" class="lgb" id="lgb" aria-expanded="${legOpen}" title="${legOpen?'Свернуть':'Развернуть'}">${legOpen?'▾':'▸'}</button></div><div class="lgbody"${legOpen?'':' hidden'}>`;
- const qs=Q.filter(([q])=>flt.q.has(q));
- if(flt.c.has('карьер')||flt.c.has('отвал')){const qq=qs.filter(([q])=>q!=='вне очереди');if(qq.length){const t=[flt.c.has('карьер')?'карьеры':'',flt.c.has('отвал')?'отвалы':''].filter(Boolean).join(' и ');h+=`<h4>${t[0].toUpperCase()+t.slice(1)} – очередь ревитализации</h4>`+qq.map(([q,v])=>r(`<i class="c" style="background:var(${v})"></i>`,q)).join('')}}
+ const qs=Q.filter(([q])=>flt.qs.has(q));
+ if(flt.c.has('карьер')||flt.c.has('отвал')){const qq=Q.slice(0,3).filter(([q])=>flt.q.has(q));if(qq.length){const t=[flt.c.has('карьер')?'карьеры':'',flt.c.has('отвал')?'отвалы':''].filter(Boolean).join(' и ');h+=`<h4>${t[0].toUpperCase()+t.slice(1)} – очередь ревитализации</h4>`+qq.map(([q,v])=>r(`<i class="c" style="background:var(${v})"></i>`,q)).join('')}}
  if(flt.c.has('свалка')&&qs.length)h+='<h4>Свалки и полигоны ТБО – очередь ликвидации</h4>'+qs.map(([q,,v])=>r(`<i class="s" style="background:var(${v})"></i>`,q==='вне очереди'?'вне очереди (> 500 м от карьера)':q)).join('');
  if(map.hasLayer(numLayer))h+=r('<i class="nn">12</i>','номер объекта (как в списке)');
  h+='<h4>Границы</h4>'+r('<i class="ln" style="border-color:#d62728;border-top-style:dashed;border-top-width:3px"></i>','граница ГО')+(map.hasLayer(rn)?r('<i class="ln" style="border-color:#ef6a74;border-top-width:1.5px"></i>','границы районов'):'');
@@ -876,18 +877,21 @@ function legend(){const lg=document.getElementById('legend');if(!lg||typeof flt=
 const FO=objs.filter(o=>o.kind!=='свалка'),sum=a=>a.reduce((s,o)=>s+(+o.p.площадь_расч_га||0),0),tot=sum(objs);
 const near=objs.filter(o=>o.sq&&o.q!=='вне очереди').length;
 document.getElementById('kpi').innerHTML=[[FO.length,`карьеров и отвалов, ${sum(FO).toLocaleString('ru-RU',{maximumFractionDigits:1})} га`],[objs.filter(o=>o.kind==='карьер').length,'карьеров'],[objs.filter(o=>o.kind==='отвал').length,'отвалов вскрышных пород'],[objs.filter(o=>o.sq).length,`свалок и полигонов ТБО, ${near} – в очередях`]].map(([b,s])=>`<div><b>${b}</b><span>${s}</span></div>`).join('');
-const flt={q:new Set(Q.map(x=>x[0])),c:new Set(['карьер','отвал','свалка'])};
+const flt={q:new Set(Q.slice(0,3).map(x=>x[0])),qs:new Set(Q.map(x=>x[0])),c:new Set(['карьер','отвал','свалка'])};
 const list=document.getElementById('list'),cnt=document.getElementById('cnt');
 objs.forEach(o=>{const p=o.p,b=document.createElement('button');b.className='item';b.type='button';
  b.innerHTML=`<span class="r">${o.n}</span><span><span class="dot${o.sq?' sq':''}" style="background:${colOf(o)}"></span>${p.имя||'без названия'}<small>${o.kind}${p.ранг?' · ранг '+p.ранг:''} · ${(p.район||'').replace(' район','')} · ${o.q}</small></span><span class="num">${fmt('га',+p.площадь_расч_га)}</span>`;
  b.onclick=()=>{const bb=o.poly?o.poly.getBounds():L.latLngBounds([o.mk.getLatLng(),o.mk.getLatLng()]);map.fitBounds(bb.pad(1.5),{maxZoom:15});o.mk.openPopup()};
  o.btn=b;list.appendChild(b)});
 let showNum=true;
-function apply(){let n=0,a=0;objs.forEach(o=>{const on=flt.q.has(o.q)&&flt.c.has(o.kind);o.btn.hidden=!on;if(on){n++;a+=+o.p.площадь_расч_га||0;objLayer.addLayer(o.g);numLayer.addLayer(o.nl)}else{objLayer.removeLayer(o.g);numLayer.removeLayer(o.nl)}});legend();cnt.textContent=`показано ${n} из ${objs.length} · ${a.toLocaleString('ru-RU',{maximumFractionDigits:1})} га`}
+function apply(){let n=0,a=0;objs.forEach(o=>{const on=(o.sq?flt.qs:flt.q).has(o.q)&&flt.c.has(o.kind);o.btn.hidden=!on;if(on){n++;a+=+o.p.площадь_расч_га||0;objLayer.addLayer(o.g);numLayer.addLayer(o.nl)}else{objLayer.removeLayer(o.g);numLayer.removeLayer(o.nl)}});legend();cnt.textContent=`показано ${n} из ${objs.length} · ${a.toLocaleString('ru-RU',{maximumFractionDigits:1})} га`}
 const qd=document.getElementById('q');
-Q.forEach(([q,v,dv],i)=>{const g=objs.filter(o=>o.q===q),a=sum(g),nk=g.filter(o=>!o.sq).length,ns=g.filter(o=>o.sq).length;const el=document.createElement('label');
- el.innerHTML=`<input type="checkbox" id="q${i}" checked><span class="sws">${i<3?`<span class="sw" style="background:var(${v})"></span>`:'<span style="width:12px"></span>'}<span class="sw sq" style="background:var(${dv})"></span></span><span>${q}</span><span class="num">${nk?nk+'+':''}${ns} св.</span><span class="num">${Math.round(a)} га</span>`;
- el.querySelector('input').onchange=e=>{e.target.checked?flt.q.add(q):flt.q.delete(q);apply()};qd.appendChild(el)});
+const qsd=document.getElementById('qs');
+function qrow(host,id,q,col,sq,set,g,lab){const a=sum(g),el=document.createElement('label');
+ el.innerHTML=`<input type="checkbox" id="${id}" checked><span class="sws"><span class="sw${sq?' sq':''}" style="background:var(${col})"></span></span><span>${lab||q}</span><span class="num">${g.length}</span><span class="num">${a<10?a.toLocaleString('ru-RU',{maximumFractionDigits:1}):Math.round(a)} га</span>`;
+ el.querySelector('input').onchange=e=>{e.target.checked?set.add(q):set.delete(q);apply()};host.appendChild(el)}
+Q.slice(0,3).forEach(([q,v],i)=>qrow(qd,'q'+i,q,v,false,flt.q,objs.filter(o=>!o.sq&&o.q===q)));
+Q.forEach(([q,,dv],i)=>qrow(qsd,'qs'+i,q,dv,true,flt.qs,objs.filter(o=>o.sq&&o.q===q),q==='вне очереди'?'вне очереди (> 500 м от карьера)':null));
 const cl=document.getElementById('cls');
 [['карьер','Карьеры (57)'],['отвал','Отвалы (23)'],['свалка','Свалки и ТБО (39)']].forEach(([c,n],i)=>{const el=document.createElement('label');el.innerHTML=`<input type="checkbox" id="c${i}" checked> ${n}`;el.querySelector('input').onchange=e=>{e.target.checked?flt.c.add(c):flt.c.delete(c);apply()};cl.appendChild(el)});
 function chip(host,id,name,on,fn){const b=document.createElement('button');b.className='chip';b.id=id;b.type='button';b.textContent=name;b.setAttribute('aria-pressed',String(on));b.onclick=()=>{const v=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',String(v));fn(v)};host.appendChild(b);return b}
