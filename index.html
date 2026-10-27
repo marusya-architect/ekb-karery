@@ -753,6 +753,8 @@ h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
 .dlh{font-size:11.5px;color:var(--muted);margin:6px 0 0}
 .ctl{font:600 10px/1 var(--f-body);color:#7a4b1e;text-shadow:0 0 2px #fff,0 0 2px #fff;white-space:nowrap}
 .noctl .ctl{display:none}
+.stl{position:absolute;white-space:nowrap;font:500 10px/1 var(--f-body);color:#3b3b3b;letter-spacing:.02em;text-shadow:0 0 2px #fff,0 0 2px #fff,0 0 3px #fff}
+.stl.big{font-weight:600;font-size:10.5px;color:#222}
 /* матрица */
 .mx{background:color-mix(in srgb,var(--panel) 96%,transparent);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:11px;line-height:1.3;width:min(560px,calc(100vw - 440px));max-height:calc(100vh - 40px);overflow:auto;box-shadow:0 1px 4px rgba(0,0,0,.15)}
 .mx.cl{width:auto}
@@ -962,8 +964,17 @@ D.rnl.forEach(([y,x,n])=>rnLab.addLayer(L.marker([y,x],{icon:lbl('rn',n.replace(
 D.lb.sett.forEach(([y,x,n,p])=>rnLab.addLayer(L.marker([y,x],{icon:lbl('np'+(p==='city'?' big':''),n),interactive:false,keyboard:false})));
 const PR=['ж/д станция','вуз','театр','стадион','зоопарк','администрация','больница','ТРЦ','музей','автовокзал','аквапарк','кинотеатр','колледж','суд','библиотека','культура','спорткомплекс','парк','галерея','остановочный пункт','достопримечательность'];
 const poiLab=L.layerGroup();
+// --- названия улиц (OSM / NextGIS): подгружаются при включении, показываются с z13 по значимости, без наложений
+map.createPane('stP').style.zIndex=640;map.getPane('stP').style.pointerEvents='none';
+const stLab=L.layerGroup();let ST=null,stState=0;
+function stLoad(){if(stState)return;stState=1;fetch('streets.json').then(r=>r.json()).then(j=>{ST=j.map(([la,lo,a,pr,n])=>({ll:L.latLng(la,lo),a,pr,n}));ST.sort((x,y)=>x.pr-y.pr);stState=2;stZoom()}).catch(()=>{stState=0})}
+function stZoom(){stLab.clearLayers();if(!ST||!map.hasLayer(stLab))return;const z=map.getZoom();if(z<13)return;const mp=z>=15?6:z>=14?4:2,bb=map.getBounds().pad(.1),boxes=map.hasLayer(poiLab)?poiBoxes.slice():[];
+ for(const s of ST){if(s.pr>mp||!bb.contains(s.ll))continue;const pt=map.latLngToContainerPoint(s.ll),w=s.n.length*5.6+8,h=12,rad=Math.abs(s.a)*Math.PI/180,bw=Math.abs(w*Math.cos(rad))+Math.abs(h*Math.sin(rad)),bh=Math.abs(w*Math.sin(rad))+Math.abs(h*Math.cos(rad)),r=[pt.x-bw/2,pt.y-bh/2,pt.x+bw/2,pt.y+bh/2];
+  if(boxes.some(b=>!(r[2]<b[0]||r[0]>b[2]||r[3]<b[1]||r[1]>b[3])))continue;boxes.push(r);
+  stLab.addLayer(L.marker(s.ll,{pane:'stP',interactive:false,icon:L.divIcon({className:'',iconSize:null,html:`<span class="stl${s.pr<=2?' big':''}" style="transform:translate(-50%,-50%) rotate(${s.a}deg)">${s.n}</span>`})}))}}
+map.on('moveend',()=>{if(map.hasLayer(stLab))setTimeout(stZoom,0)});
 const POI=D.lb.poi.map(([y,x,n,t])=>({ll:L.latLng(y,x),n,t,pr:PR.indexOf(t),m:L.marker([y,x],{icon:lbl('poi',`<b></b>${n}`),interactive:false,keyboard:false})})).sort((a,b)=>a.pr-b.pr);
-function poiZoom(){poiLab.clearLayers();const z=map.getZoom();if(z<13)return;const maxPr=z>=15?99:z>=14?11:7;const bb=map.getBounds().pad(.1),boxes=[];
+let poiBoxes=[];function poiZoom(){poiBoxes=[];poiLab.clearLayers();const z=map.getZoom();if(z<13)return;const maxPr=z>=15?99:z>=14?11:7;const bb=map.getBounds().pad(.1),boxes=[];poiBoxes=boxes;
  for(const p of POI){if(p.pr>maxPr||!bb.contains(p.ll))continue;const pt=map.latLngToContainerPoint(p.ll),w=Math.min(p.n.length,40)*6+12,r=[pt.x-6,pt.y-8,pt.x+w,pt.y+8];
   if(boxes.some(b=>!(r[2]<b[0]||r[0]>b[2]||r[3]<b[1]||r[1]>b[3])))continue;boxes.push(r);poiLab.addLayer(p.m)}}
 map.on('moveend',()=>{if(map.hasLayer(poiLab))poiZoom()});
@@ -1019,7 +1030,7 @@ function legend(){const lg=document.getElementById('legend');if(!lg||typeof flt=
  if(map.hasLayer(retro))h+='<h4>Ретро-снимок</h4><div style="font-size:11px">Esri World Imagery Wayback, съёмка DigitalGlobe 2014–2015 гг. (даты различаются по участкам)'+(swipeOn?'; слева от шторки – ретро, справа – 2025 г.':'')+'</div>';
  if(map.hasLayer(gp))h+='<h4>Генплан до 2045 г. (утв. редакция 2025 г.)</h4>'+r('<i class="ar" style="background:linear-gradient(90deg,#f26a50,#c2007b,#8a6364,#1c8f68,#cfd0ff)"></i>',`функциональные зоны – <a href="${GPL}" target="_blank" rel="noopener">легенда</a>`)+`<div style="color:var(--muted);font-size:10.5px">${gpSrc||'загрузка…'}; покрывает центральную часть ГО</div>`;
  if(map.hasLayer(pp))h+='<h4>Проект «Шабровские карьеры»</h4>'+['граница_пилотной_площадки','зона_ограничения_доступа_30м','входная_зона','зона_музеефикации','зона_регулируемой_водной_рекреации','рекультивация_отвала','экотропа','смотровые_площадки'].map(k=>r(k==='экотропа'||k==='граница_пилотной_площадки'?`<i class="ln" style="border-color:${PPCol(k)}${k==='граница_пилотной_площадки'?';border-top-style:dashed':''}"></i>`:k==='смотровые_площадки'?'<i class="c" style="background:#fff"></i>':`<i class="ar" style="background:${PPCol(k)};opacity:.8"></i>`,PPN[k].replace(' (буфер 500 м)',''))).join('');
- const sub=[];if(map.hasLayer(rnLab))sub.push(r('<i class="tx">Аб</i>','районы и посёлки'));if(map.hasLayer(poiLab))sub.push(r('<i class="pd"></i>','важные здания (с приближением)'));if(sub.length)h+='<h4>Подписи</h4>'+sub.join('');
+ const sub=[];if(map.hasLayer(stLab))sub.push(r('<i class="tx" style="font-weight:500">ул.</i>','названия улиц (с приближением)'));if(map.hasLayer(rnLab))sub.push(r('<i class="tx">Аб</i>','районы и посёлки'));if(map.hasLayer(poiLab))sub.push(r('<i class="pd"></i>','значимые объекты (с приближением)'));if(sub.length)h+='<h4>Подписи</h4>'+sub.join('');
  if(bmCur==='sch')h+='<h4>Условная карта</h4>'+r('<i class="ar" style="background:#d6cdc0;border:1px solid #baac9e"></i>','здания')+r('<i class="ln" style="border-color:#e8924a;border-top-width:4px"></i>','магистрали')+r('<i class="ln" style="border-color:#f6c460;border-top-width:3px"></i>','главные улицы')+r('<i class="ln" style="border-color:#b4aea6;border-top-width:2px"></i>','улицы и проезды')+r('<i class="ln" style="border-color:#828282;border-top-width:2px"></i>','железные дороги')+r('<i class="ar" style="background:#a6c9e2"></i>','водоёмы')+r('<i class="ar" style="background:#d6e5c8"></i>','леса')+r('<i class="ar" style="background:#c8e2b4"></i>','парки, скверы');
  if(bmCur==='sat')h+='<h4>Подложка</h4>'+r('<i class="ar" style="background:linear-gradient(135deg,#3d5a2e,#6b7d55)"></i>','космоснимок © Esri');
  lg.innerHTML=h+'</div>';document.getElementById('lgb').onclick=()=>{legOpen=!legOpen;legend()}}
@@ -1069,7 +1080,8 @@ chip(tg,'t-gp','Генплан: функциональные зоны',false,v=>
 const lb=document.getElementById('lbl');
 chip(lb,'l-num','Номера объектов',true,tog(numLayer));
 chip(lb,'l-rn','Районы и посёлки',true,tog(rnLab));
-chip(lb,'l-poi','Важные здания',true,v=>{tog(poiLab)(v);if(v)poiZoom()});
+chip(lb,'l-st','Названия улиц',true,v=>{tog(stLab)(v);if(v){stLoad();stZoom()}});stLab.addTo(map);stLoad();
+chip(lb,'l-poi','Значимые объекты',true,v=>{tog(poiLab)(v);if(v)poiZoom()});
 numLayer.addTo(map);rnLab.addTo(map);poiLab.addTo(map);
 const app=document.getElementById('app'),stog=document.getElementById('stog');
 const arrow=()=>{const c=app.classList.contains('collapsed'),m=innerWidth<=760;stog.textContent=m?(c?'▼':'▲'):(c?'▶':'◀');stog.title=c?'Развернуть панель':'Свернуть панель';stog.setAttribute('aria-expanded',String(!c))};
