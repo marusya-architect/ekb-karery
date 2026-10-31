@@ -886,8 +886,8 @@ const OVS={
   o:{style:f=>({pane:'ovP',color:{tram:'#e31a1c',bus:'#1f78b4',trolleybus:'#33a02c'}[f.properties.t]||'#6a3d9a',weight:2,opacity:.7}),onEachFeature:(f,l)=>l.bindPopup(`<div class="pop"><h3>${({tram:'Трамвай',bus:'Автобус',trolleybus:'Троллейбус'}[f.properties.t]||f.properties.t)}</h3>маршруты: ${f.properties.refs||'–'}</div>`)}},
  power:{n:'ЛЭП и подстанции',f:['ov_power_lines.json','ov_power_poly.json'],lg:[['l','#ff7f00','линии электропередачи'],['a','#ffbf80','подстанции, электростанции']],
   o:{style:f=>f.geometry.type.includes('Polygon')?{pane:'ovP',color:'#ff7f00',weight:1,fillColor:'#ffbf80',fillOpacity:.6}:{pane:'ovP',color:'#ff7f00',weight:1.6,dashArray:'6 3'},onEachFeature:(f,l)=>{const p=f.properties;l.bindTooltip([p.n,p.v&&(+p.v/1000)+' кВ',p.VOLTAGE&&'напряжение '+p.VOLTAGE,p.POWER==='plant'?'электростанция':p.POWER==='substation'?'подстанция':''].filter(Boolean).join(' · ')||'ЛЭП')}}},
- pipes:{n:'Трубопроводы',f:'ov_pipes.json',lg:[['l','#8c510a','трубопроводы (газ, тепло, вода)']],
-  o:{style:{pane:'ovP',color:'#8c510a',weight:1.6,dashArray:'2 3'},onEachFeature:(f,l)=>{const p=f.properties;l.bindTooltip([p.n,{gas:'газ',hot_water:'горячая вода',water:'вода',heat:'тепло',oil:'нефть',sewage:'канализация'}[p.SUBSTANCE]||p.SUBSTANCE,{overground:'надземный',underground:'подземный',overhead:'надземный'}[p.LOCATION]].filter(Boolean).join(' · ')||'трубопровод')}}},
+ pipes:{n:'Трубопроводы',f:'ov_pipes.json',lg:[['l','#007bff','трубопроводы (газ, тепло, вода)']],
+  o:{style:{pane:'ovP',color:'#007bff',weight:3.2,opacity:1,dashArray:'7 3'},onEachFeature:(f,l)=>{const p=f.properties;l.bindTooltip([p.n,{gas:'газ',hot_water:'горячая вода',water:'вода',heat:'тепло',oil:'нефть',sewage:'канализация'}[p.SUBSTANCE]||p.SUBSTANCE,{overground:'надземный',underground:'подземный',overhead:'надземный'}[p.LOCATION]].filter(Boolean).join(' · ')||'трубопровод')}}},
  oopt:{n:'ООПТ и лесопарки',f:'ov_oopt.json',lg:[['a','rgba(51,160,44,.25)','особо охраняемые природные территории']],
   o:{style:{pane:'ovP',color:'#33a02c',weight:1.5,fillColor:'#33a02c',fillOpacity:.18},onEachFeature:(f,l)=>l.bindTooltip(f.properties.n||'ООПТ')}},
  hydro:{n:'Реки и ручьи',f:'ov_hydro.json',lg:[['l','#1f9ed1','реки, ручьи, каналы']],
@@ -1120,7 +1120,7 @@ mxDraw();
 </script>
 
 <script src="zones.js?v=2"></script>
-<script src="layer-panel.js?v=3"></script>
+<script src="layer-panel.js?v=4"></script>
 <script src="object-analysis.js?v=3"></script>
 </body>
 </html>
