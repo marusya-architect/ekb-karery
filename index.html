@@ -1018,7 +1018,7 @@ const MX=[['Центральное или срединное положение 
 ['Обособленное при слабой связи с застроенной территорией','3','2/1','1','1','−','Д'],
 ['Изолированное вне устойчивых связей с населённым пунктом','1/2','1','1','1','−','Д'],
 ['Изолированное вне устойчивых связей с населённым пунктом','3','1','1','1','−','Д']];
-let mxOpen=innerWidth>760,mxRow=0;
+let mxOpen=false,mxRow=0;
 const Mc=L.control({position:'topright'});
 Mc.onAdd=()=>{const d=L.DomUtil.create('div','mx');d.id='mx';L.DomEvent.disableClickPropagation(d);L.DomEvent.disableScrollPropagation(d);return d};Mc.addTo(map);
 function mxDraw(){const d=document.getElementById('mx');d.classList.toggle('cl',!mxOpen);
@@ -1060,7 +1060,7 @@ function legend(){const lg=document.getElementById('legend');if(!lg||typeof flt=
  if(map.hasLayer(retLayer))h+=r('<i style="font-style:normal">🕓</i>','окно в прошлое – серия снимков разных лет');
  if(map.hasLayer(retro))h+='<h4>Ретро-снимок</h4><div style="font-size:11px">Esri World Imagery Wayback, съёмка DigitalGlobe 2014–2015 гг. (даты различаются по участкам)'+(swipeOn?'; слева от шторки – ретро, справа – 2025 г.':'')+'</div>';
  if(map.hasLayer(gp))h+='<h4>Генплан до 2045 г. (утв. редакция 2025 г.)</h4>'+r('<i class="ar" style="background:linear-gradient(90deg,#f26a50,#c2007b,#8a6364,#1c8f68,#cfd0ff)"></i>',`функциональные зоны – <a href="${GPL}" target="_blank" rel="noopener">легенда</a>`)+`<div style="color:var(--muted);font-size:10.5px">${gpSrc||'загрузка…'}; покрывает центральную часть ГО</div>`;
- for(const v of Object.values(window.savedZonesLayers||{}))if(map.hasLayer(v.layer))h+='<h4>'+v.name+'</h4><div style="font-size:10.5px">Снимок НСПД · 31.10.2026 · цвета исходного слоя</div>';
+ for(const v of Object.values(window.savedZonesLayers||{}))if(map.hasLayer(v.layer))h+='<h4>'+v.name+'</h4>'+window.zoneLegend(v);
  if(map.hasLayer(kvLayer))h+='<h4>Кадастровые кварталы (НСПД)</h4>'+r('<i class="ar" style="background:none;border:1.5px solid #d7191c"></i>','границы и номера кварталов — покрытие всей территории ГО Екатеринбург')+'<div style="color:var(--muted);font-size:10.5px">снимок публичной карты НСПД, 31.10.2026</div>';
  for(const k in OVS)if(map.hasLayer(OVS[k].layer))h+=`<h4>${OVS[k].n}</h4>`+OVS[k].lg.map(([t,c,s])=>r(t==='c'?`<i class="c" style="background:${c}"></i>`:t==='l'?`<i class="ln" style="border-color:${c};border-top-width:2px"></i>`:`<i class="ar" style="background:${c};border:1px solid #666"></i>`,s)).join('');
  if(map.hasLayer(pp))h+='<h4>Проект «Шабровские карьеры»</h4>'+['граница_пилотной_площадки','зона_ограничения_доступа_30м','входная_зона','зона_музеефикации','зона_регулируемой_водной_рекреации','рекультивация_отвала','экотропа','смотровые_площадки'].map(k=>r(k==='экотропа'||k==='граница_пилотной_площадки'?`<i class="ln" style="border-color:${PPCol(k)}${k==='граница_пилотной_площадки'?';border-top-style:dashed':''}"></i>`:k==='смотровые_площадки'?'<i class="c" style="background:#fff"></i>':`<i class="ar" style="background:${PPCol(k)};opacity:.8"></i>`,PPN[k].replace(' (буфер 500 м)',''))).join('');
@@ -1128,6 +1128,7 @@ apply();setBM('sat');lineCol();map.fitBounds(go.getBounds(),{padding:[12,12]});p
 mxDraw();
 </script>
 
-<script src="zones.js"></script>
+<script src="zones.js?v=2"></script>
+<script src="layer-panel.js?v=2"></script>
 </body>
 </html>
