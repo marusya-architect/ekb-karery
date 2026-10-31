@@ -868,18 +868,18 @@ const GPLayer=L.Layer.extend({
 });
 const gp=new GPLayer();
 // --- кадастровые кварталы НСПД: снимок карты (z15) вокруг объектов, nspd_kvartaly.json
-let KV=null,kvSt=0;const KVI={};
-const KVL=L.GridLayer.extend({createTile(c,done){const cv=document.createElement('canvas');cv.width=cv.height=256;const g=cv.getContext('2d');
- if(!KV){setTimeout(()=>done(null,cv));return cv}
- const img=(k,cb)=>{if(!KV[k])return cb(null);let im=KVI[k];if(im&&im.complete)return cb(im);im=im||new Image();KVI[k]=im;im.addEventListener('load',()=>cb(im));if(!im.src)im.src='data:image/webp;base64,'+KV[k]};
- if(c.z>=15){const dz=c.z-15,x=c.x>>dz,y=c.y>>dz,s=256/2**dz;img('15/'+x+'/'+y,im=>{if(im)g.drawImage(im,(c.x-x*2**dz)*s,(c.y-y*2**dz)*s,s,s,0,0,256,256);done(null,cv)})}
- else{let n=4;const fin=()=>{if(--n===0)done(null,cv)};for(let i=0;i<2;i++)for(let j=0;j<2;j++)img('15/'+(c.x*2+i)+'/'+(c.y*2+j),im=>{if(im)g.drawImage(im,i*128,j*128,128,128);fin()})}
- return cv}});
-const kvLayer=new KVL({minZoom:14,maxZoom:17,pane:'ovP',attribution:'кадастровые кварталы © НСПД'});
-function kvLoad(){if(kvSt)return;kvSt=1;fetch('nspd_kvartaly.json').then(r=>r.json()).then(j=>{KV=j;kvSt=2;kvLayer.redraw()}).catch(()=>{kvSt=0})}
+let KV=null,kvSt=0;
+const kvNotice=document.createElement('p');kvNotice.className='dlh';kvNotice.setAttribute('role','status');document.getElementById('tg2').after(kvNotice);
+const kvLayer=L.tileLayer('',{minZoom:9,minNativeZoom:13,maxNativeZoom:13,maxZoom:17,pane:'ovP',attribution:'кадастровые кварталы © НСПД · снимок 31.10.2026'});
+kvLayer.getTileUrl=function(c){const file=KV&&KV[c.z+'/'+c.x+'/'+c.y];return file?'quarter_tiles/'+file:L.Util.emptyImageUrl;};
+function kvStatus(){if(!map.hasLayer(kvLayer)){kvNotice.textContent='';return;}if(kvSt===1){kvNotice.textContent='Загрузка кадастровых кварталов…';return;}if(kvSt!==2)return;kvNotice.textContent='Кадастровые кварталы: сохранённый слой по всей территории ГО Екатеринбург, 31.10.2026. '+(map.getZoom()<14?'Приблизьте карту для чтения номеров. ':'')+'Это снимок карты НСПД, не границы земельных участков.';}
+async function kvLoad(){if(kvSt){kvStatus();return;}kvSt=1;kvStatus();try{const r=await fetch('quarters_manifest.json');if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();if(!j||!Object.keys(j).length)throw new Error('Пустая выгрузка');KV=j;kvSt=2;kvLayer.redraw();kvStatus();}catch(e){kvSt=0;kvNotice.textContent='Кварталы не загрузились. Выключите и включите слой для повтора. '+e.message;}}
+kvLayer.on('tileerror',()=>{kvNotice.textContent='Часть изображения кварталов не загрузилась. Проверьте соединение и повторно включите слой.';});
+map.on('zoomend moveend layeradd layerremove',kvStatus);
 // --- дополнительные векторные слои (OSM/NextGIS), отдельные файлы ov_*.json
 map.createPane('ovP').style.zIndex=395;
 const OVS={
+ egrn:{n:'Земельные участки ЕГРН — выборка',f:'ov_egrn.geojson',lg:[['l','#ff3366','границы участков ЕГРН — выборка у объектов; 31.10.2026']],o:{style:{color:'#ff3366',weight:2,fillOpacity:.04},onEachFeature:(f,l)=>{const p=f.properties;const box=document.createElement('div');box.className='pop';for(const [label,key] of [['Участок','cad_num'],['Адрес','readable_address'],['Категория','land_record_category_type'],['Использование','permitted_use_established_by_document'],['Площадь по сведениям НСПД, м²','specified_area'],['Статус','status']]){if(p[key]!=null&&p[key]!==''){const line=document.createElement('p');line.textContent=label+': '+p[key];box.appendChild(line)}}const note=document.createElement('small');note.textContent='НСПД через QGIS, сохранено 31.10.2026. Выборка по точкам объектов; не полный кадастр территории.';box.appendChild(note);l.bindPopup(box,{maxWidth:330});l.bindTooltip(String(p.cad_num||'Участок ЕГРН'));}}},
  stops:{n:'Остановки транспорта',f:'ov_stops.json',lg:[['c','#1f78b4','автобус / троллейбус'],['c','#e31a1c','трамвай'],['c','#111','ж/д станция']],
   o:{pointToLayer:(f,ll)=>L.circleMarker(ll,{pane:'ovP',radius:f.properties.t==='rail'?4.5:3,weight:1,color:'#fff',fillOpacity:1,fillColor:{bus:'#1f78b4',tram:'#e31a1c',rail:'#111'}[f.properties.t]||'#1f78b4'}),onEachFeature:(f,l)=>l.bindTooltip((f.properties.n||'остановка')+' · '+({bus:'автобус',tram:'трамвай',rail:'ж/д'}[f.properties.t]||''))}},
  routes:{n:'Маршруты общественного транспорта',f:'ov_routes.json',lg:[['l','#e31a1c','трамвай'],['l','#1f78b4','автобус'],['l','#33a02c','троллейбус'],['l','#6a3d9a','прочие']],
@@ -893,7 +893,7 @@ const OVS={
  hydro:{n:'Реки и ручьи',f:'ov_hydro.json',lg:[['l','#1f9ed1','реки, ручьи, каналы']],
   o:{style:f=>({pane:'ovP',color:'#1f9ed1',weight:f.properties.WATERWAY==='river'?2:1}),onEachFeature:(f,l)=>{if(f.properties.n)l.bindTooltip(f.properties.n)}}}};
 for(const k in OVS){const v=OVS[k];v.layer=L.layerGroup();v.st=0}
-function ovLoad(k){const v=OVS[k];if(v.st)return;v.st=1;Promise.all([].concat(v.f).map(u=>fetch(u).then(r=>r.json()))).then(a=>{a.forEach(fc=>L.geoJSON(fc,Object.assign({pane:'ovP'},v.o)).addTo(v.layer));v.st=2}).catch(()=>{v.st=0})}
+async function ovLoad(k){const v=OVS[k];if(v.st)return;v.st=1;const btn=document.getElementById('ov-'+k);try{const a=await Promise.all([].concat(v.f).map(async u=>{const r=await fetch(u);if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}));a.forEach(fc=>L.geoJSON(fc,Object.assign({pane:'ovP'},v.o)).addTo(v.layer));v.st=2;if(btn)btn.title='Данные загружены';}catch(e){v.st=0;v.layer.clearLayers();if(btn){btn.title='Ошибка загрузки: '+e.message;btn.setAttribute('aria-pressed','false')}map.removeLayer(v.layer);alert('Не удалось загрузить слой «'+v.n+'». Повторите включение.');}}
 // --- изолинии рельефа (Terrain Tiles / SRTM, шаг 10 м, утолщённые через 50 м), подгружаются при включении
 map.createPane('ctP').style.zIndex=410;map.getPane('ctP').style.pointerEvents='none';
 const ctl=L.layerGroup(),ctLab=L.layerGroup();let ctLoaded=false;
@@ -1060,7 +1060,7 @@ function legend(){const lg=document.getElementById('legend');if(!lg||typeof flt=
  if(map.hasLayer(retLayer))h+=r('<i style="font-style:normal">🕓</i>','окно в прошлое – серия снимков разных лет');
  if(map.hasLayer(retro))h+='<h4>Ретро-снимок</h4><div style="font-size:11px">Esri World Imagery Wayback, съёмка DigitalGlobe 2014–2015 гг. (даты различаются по участкам)'+(swipeOn?'; слева от шторки – ретро, справа – 2025 г.':'')+'</div>';
  if(map.hasLayer(gp))h+='<h4>Генплан до 2045 г. (утв. редакция 2025 г.)</h4>'+r('<i class="ar" style="background:linear-gradient(90deg,#f26a50,#c2007b,#8a6364,#1c8f68,#cfd0ff)"></i>',`функциональные зоны – <a href="${GPL}" target="_blank" rel="noopener">легенда</a>`)+`<div style="color:var(--muted);font-size:10.5px">${gpSrc||'загрузка…'}; покрывает центральную часть ГО</div>`;
- if(map.hasLayer(kvLayer))h+='<h4>Кадастровые кварталы (НСПД)</h4>'+r('<i class="ar" style="background:none;border:1.5px solid #d7191c"></i>','границы и номера кварталов – видны с приближения, в радиусе ~600 м от объектов')+'<div style="color:var(--muted);font-size:10.5px">снимок публичной карты НСПД, 27.10.2026</div>';
+ if(map.hasLayer(kvLayer))h+='<h4>Кадастровые кварталы (НСПД)</h4>'+r('<i class="ar" style="background:none;border:1.5px solid #d7191c"></i>','границы и номера кварталов — покрытие всей территории ГО Екатеринбург')+'<div style="color:var(--muted);font-size:10.5px">снимок публичной карты НСПД, 31.10.2026</div>';
  for(const k in OVS)if(map.hasLayer(OVS[k].layer))h+=`<h4>${OVS[k].n}</h4>`+OVS[k].lg.map(([t,c,s])=>r(t==='c'?`<i class="c" style="background:${c}"></i>`:t==='l'?`<i class="ln" style="border-color:${c};border-top-width:2px"></i>`:`<i class="ar" style="background:${c};border:1px solid #666"></i>`,s)).join('');
  if(map.hasLayer(pp))h+='<h4>Проект «Шабровские карьеры»</h4>'+['граница_пилотной_площадки','зона_ограничения_доступа_30м','входная_зона','зона_музеефикации','зона_регулируемой_водной_рекреации','рекультивация_отвала','экотропа','смотровые_площадки'].map(k=>r(k==='экотропа'||k==='граница_пилотной_площадки'?`<i class="ln" style="border-color:${PPCol(k)}${k==='граница_пилотной_площадки'?';border-top-style:dashed':''}"></i>`:k==='смотровые_площадки'?'<i class="c" style="background:#fff"></i>':`<i class="ar" style="background:${PPCol(k)};opacity:.8"></i>`,PPN[k].replace(' (буфер 500 м)',''))).join('');
  const sub=[];if(map.hasLayer(stLab))sub.push(r('<i class="tx" style="font-weight:500">ул.</i>','названия улиц (с приближением)'));if(map.hasLayer(rnLab))sub.push(r('<i class="tx">Аб</i>','районы и посёлки'));if(map.hasLayer(poiLab))sub.push(r('<i class="pd"></i>','значимые объекты (с приближением)'));if(sub.length)h+='<h4>Подписи</h4>'+sub.join('');
@@ -1113,6 +1113,7 @@ chip(tg,'t-gp','Генплан: функциональные зоны',false,v=>
 const tg2=document.getElementById('tg2');
 chip(tg2,'ov-kv','Кадастровые кварталы (НСПД)',false,on=>{if(on)kvLoad();tog(kvLayer)(on)});
 for(const k in OVS)chip(tg2,'ov-'+k,OVS[k].n,false,on=>{if(on)ovLoad(k);tog(OVS[k].layer)(on)});
+{const note=document.createElement('p');note.className='dlh';note.textContent='ЕГРН: сохранены участки, найденные по точкам объектов карты и сетке у Шабровских карьеров. Отсутствие контура не означает отсутствие участка. ';const link=document.createElement('a');link.href='ov_egrn.geojson';link.download='uchastki_egrn.geojson';link.textContent='Скачать границы (GeoJSON)';note.appendChild(link);tg2.after(note);}
 const lb=document.getElementById('lbl');
 chip(lb,'l-num','Номера объектов',true,tog(numLayer));
 chip(lb,'l-rn','Районы и посёлки',true,tog(rnLab));
