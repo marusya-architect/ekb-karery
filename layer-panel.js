@@ -28,6 +28,15 @@
  Object.entries(ZONES).forEach(([k,v],i)=>{v.legendItems=zoneSymbols[i];v.palette=v.legendItems.map(x=>x[0]);v.key=k});
  window.zoneLegend=v=>'<div class="zone-legend-title">'+v.name+'</div>'+v.legendItems.map(([c,label])=>'<div class="lg"><i class="zone-symbol" style="--symbol:'+c+';--wash:'+c+'33"></i><span>'+label+'</span></div>').join('');
 
+ window.collapseLayerGroups=()=>{
+  for(const section of document.querySelectorAll('.layer-group')){
+   if(section.querySelector('details.layer-fold'))continue;
+   const details=document.createElement('details');details.className='layer-fold';
+   const summary=document.createElement('summary');summary.append(section.querySelector('h2'));details.append(summary);
+   const body=document.createElement('div');body.className='layer-fold-body';while(section.firstChild)body.append(section.firstChild);details.append(body);section.append(details);
+  }
+ };
+ const foldStyle=document.createElement('style');foldStyle.textContent='.layer-fold>summary{display:flex;align-items:center;gap:10px;cursor:pointer;list-style:none;padding:3px 0;min-height:28px}.layer-fold>summary::-webkit-details-marker{display:none}.layer-fold>summary h2{flex:1;margin:0}.layer-fold>summary::after{content:"▸";font-size:15px;color:var(--muted)}.layer-fold[open]>summary::after{content:"▾"}.layer-fold>summary:focus-visible{outline:2px solid var(--ink);outline-offset:4px;border-radius:3px}.layer-fold-body{padding-top:10px}';document.head.append(foldStyle);
  window.groupedLayerLegend=r=>{
   const line=(c,dashed=false)=>'<i class="ln" style="border-color:'+c+';border-top-width:2px;'+(dashed?'border-top-style:dashed':'')+'"></i>';
   const area=(c)=>'<i class="ar" style="background:'+c+';border:1px solid #666"></i>';
