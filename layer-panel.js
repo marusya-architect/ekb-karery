@@ -33,6 +33,7 @@
   const area=(c)=>'<i class="ar" style="background:'+c+';border:1px solid #666"></i>';
   function content(id){
    const label=byId(id).textContent;
+   if(id.startsWith('v-')&&window.vectorLegend)return window.vectorLegend(id,r);
    if(id.startsWith('zone-'))return window.zoneLegend(ZONES[id.slice(5)]);
    if(id==='t-go')return r(line('#d62728',true),label);
    if(id==='t-rn')return r(line('#ef6a74'),label);

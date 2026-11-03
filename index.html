@@ -1093,7 +1093,7 @@ const cl=document.getElementById('cls');
 function chip(host,id,name,on,fn){const b=document.createElement('button');b.className='chip';b.id=id;b.type='button';b.textContent=name;b.setAttribute('aria-pressed',String(on));b.onclick=()=>{const v=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',String(v));fn(v)};host.appendChild(b);return b}
 const tog=l=>v=>{v?l.addTo(map):map.removeLayer(l);legend()};
 const bmh=document.getElementById('bm');
-function setBM(k){if(k==='sch')tilesLoad();for(const kk in BM){const l=BM[kk][1];if(l&&map.hasLayer(l))map.removeLayer(l)}const l=BM[k][1];if(l){l.addTo(map);l.bringToBack&&l.bringToBack()}bmCur=k;bmh.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.k===k)));lineCol();legend()}
+function setBM(k){for(const kk in BM){const l=BM[kk][1];if(l&&map.hasLayer(l))map.removeLayer(l)}const l=BM[k][1];if(l){l.addTo(map);l.bringToBack&&l.bringToBack()}bmCur=k;bmh.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.k===k)));lineCol();legend()}
 for(const k in BM){const b=document.createElement('button');b.className='chip';b.type='button';b.dataset.k=k;b.id='bm-'+k;b.textContent=BM[k][0];b.onclick=()=>setBM(k);bmh.appendChild(b)}
 const tg=document.getElementById('tg');
 chip(tg,'t-pp','Проект «Шабровские карьеры»',false,tog(pp));chip(tg,'t-ct','Рельеф: изолинии (10 м)',false,v=>{if(v)ctLoad();tog(contours)(v)});chip(tg,'t-rn','Границы районов',true,tog(rn));chip(tg,'t-szz','СЗЗ 500 м',false,tog(szz));chip(tg,'t-ret','Окна в прошлое (5 объектов)',true,tog(retLayer));chip(tg,'t-retro','Ретро-снимок ~2014–2015',false,v=>{tog(retro)(v);document.getElementById('swc').hidden=!v;swClip()});
@@ -1120,7 +1120,8 @@ mxDraw();
 </script>
 
 <script src="zones.js?v=2"></script>
-<script src="layer-panel.js?v=4"></script>
+<script src="layer-panel.js?v=6"></script>
 <script src="object-analysis.js?v=5"></script>
+<script src="vector-map.js?v=1"></script>
 </body>
 </html>
