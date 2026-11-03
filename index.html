@@ -840,13 +840,16 @@ const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim
 const Q=[['I очередь (2026–2030)','--q1','--d1'],['II очередь (2031–2037)','--q2','--d2'],['III очередь (2038–2045)','--q3','--d3'],['вне очереди','--muted','--d0']];
 const qi=q=>{const i=Q.findIndex(x=>x[0]===q);return i<0?3:i};
 L.Popup.mergeOptions({autoPanPaddingTopLeft:L.point(10,56),autoPanPaddingBottomRight:L.point(10,30)});
-const map=L.map('map',{zoomSnap:.5,minZoom:9,maxZoom:17,attributionControl:true});
+const map=L.map('map',{zoomSnap:.5,minZoom:9,maxZoom:19,attributionControl:true});
 map.attributionControl.setPrefix(false).addAttribution('© Esri, Maxar · © участники OpenStreetMap');
 // --- подложки
+const satelliteTiles=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:19,keepBuffer:1,attribution:'Source: <a href="https://www.esri.com/" target="_blank" rel="noopener">Esri</a>, Vantor, Earthstar Geographics, GIS User Community'});
 const sat=L.layerGroup([
  L.imageOverlay('mos_z12.jpg',[[56.55948248376224,59.94140625],[57.040729838360875,60.99609375]],{pane:'tilePane'}),
- L.imageOverlay('mos_z15.jpg',[[56.60183848131469,60.589599609375],[56.63810586505641,60.655517578125]],{pane:'tilePane'})
+ L.imageOverlay('mos_z15.jpg',[[56.60183848131469,60.589599609375],[56.63810586505641,60.655517578125]],{pane:'tilePane'}),
+ satelliteTiles
 ]);
+const osmBase=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,keepBuffer:1,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>'});
 const IMC={};
 // --- генплан: карта функциональных зон (утв. 2025), github.com/sashachabin/genplanekb; привязка по 3 углам
 const GPU='https://raw.githubusercontent.com/sashachabin/genplanekb/main/plans/2025-ratified/'+encodeURIComponent('Функциональные зоны')+'.map.png';
@@ -870,7 +873,7 @@ const gp=new GPLayer();
 // --- кадастровые кварталы НСПД: снимок карты (z15) вокруг объектов, nspd_kvartaly.json
 let KV=null,kvSt=0;
 const kvNotice=document.createElement('p');kvNotice.className='dlh';kvNotice.setAttribute('role','status');document.getElementById('tg2').after(kvNotice);
-const kvLayer=L.tileLayer('',{minZoom:9,minNativeZoom:13,maxNativeZoom:13,maxZoom:17,pane:'ovP',attribution:'кадастровые кварталы © НСПД · снимок 31.10.2026'});
+const kvLayer=L.tileLayer('',{minZoom:9,minNativeZoom:13,maxNativeZoom:13,maxZoom:19,pane:'ovP',attribution:'кадастровые кварталы © НСПД · снимок 31.10.2026'});
 kvLayer.getTileUrl=function(c){const file=KV&&KV[c.z+'/'+c.x+'/'+c.y];return file?'quarter_tiles/'+file:L.Util.emptyImageUrl;};
 function kvStatus(){if(!map.hasLayer(kvLayer)){kvNotice.textContent='';return;}if(kvSt===1){kvNotice.textContent='Загрузка кадастровых кварталов…';return;}if(kvSt!==2)return;kvNotice.textContent='Кадастровые кварталы: сохранённый слой по всей территории ГО Екатеринбург, 31.10.2026. '+(map.getZoom()<14?'Приблизьте карту для чтения номеров. ':'')+'Это снимок карты НСПД, не границы земельных участков.';}
 async function kvLoad(){if(kvSt){kvStatus();return;}kvSt=1;kvStatus();try{const r=await fetch('quarters_manifest.json');if(!r.ok)throw new Error('HTTP '+r.status);const j=await r.json();if(!j||!Object.keys(j).length)throw new Error('Пустая выгрузка');KV=j;kvSt=2;kvLayer.redraw();kvStatus();}catch(e){kvSt=0;kvNotice.textContent='Кварталы не загрузились. Выключите и включите слой для повтора. '+e.message;}}
@@ -915,7 +918,7 @@ function lbx(i){const R=RET[i];let d=document.getElementById('lbx');if(!d){d=doc
 // --- ретро-снимок: Esri World Imagery Wayback (выпуск 2020-01-08 для мелких масштабов, 2018-01-08 для крупных; съёмка DigitalGlobe 2014–2015)
 map.createPane('retroP').style.zIndex=250;
 const WB=r=>`https://wayback.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/WMTS/1.0.0/default028mm/MapServer/tile/${r}/{z}/{y}/{x}`;
-const retro=L.layerGroup([L.tileLayer(WB(23001),{pane:'retroP',maxZoom:13.5,minZoom:9,attribution:'ретро: Esri World Imagery Wayback'}),L.tileLayer(WB(13161),{pane:'retroP',minZoom:13.5,maxZoom:17})]);
+const retro=L.layerGroup([L.tileLayer(WB(23001),{pane:'retroP',maxZoom:13.5,minZoom:9,attribution:'ретро: Esri World Imagery Wayback'}),L.tileLayer(WB(13161),{pane:'retroP',minZoom:13.5,maxNativeZoom:17,maxZoom:19})]);
 let swipeOn=false,swX=.5;
 const sw=document.createElement('div');sw.id='swipe';sw.hidden=true;sw.innerHTML='<div class="swl"></div><button type="button" class="swh" aria-label="Шторка сравнения: перетащите">⟷</button><span class="swt swa">~2014–2015</span><span class="swt swb">2025</span>';
 map.getContainer().appendChild(sw);L.DomEvent.disableClickPropagation(sw);
@@ -931,8 +934,8 @@ const Schem=L.GridLayer.extend({createTile(c,done){const cv=document.createEleme
  const draw=im=>{const s=256/2**dz,sx=(c.x-x*2**dz)*s,sy=(c.y-y*2**dz)*s;const g=cv.getContext('2d');g.drawImage(im,sx,sy,s,s,0,0,256,256);done(null,cv)};
  if(IMC[k]&&IMC[k].complete){draw(IMC[k])}else{const im=IMC[k]||new Image();IMC[k]=im;im.addEventListener('load',()=>draw(im));if(!im.src)im.src='data:image/webp;base64,'+T[k]}
  return cv}});
-const schem=new Schem({maxZoom:17,minZoom:9,attribution:''});
-const BM={sat:['Космоснимок',sat],sch:['Условная карта',schem],none:['Без подложки',null]};
+const schem=new Schem({maxZoom:19,minZoom:9,attribution:''});
+const BM={sat:['Космоснимок · Esri',sat],sch:['Условная карта',schem],osm:['Условная карта · OSM',osmBase],none:['Без подложки',null]};
 let bmCur='sat';
 // --- граница и районы
 const goHalo=L.geoJSON(D.go,{style:{color:'#ffffff',weight:5,opacity:.55,fill:false},interactive:false}).addTo(map);
@@ -964,7 +967,7 @@ function pop(o){const p=o.p,c=colOf(o);let h=`<div class="pop"><h3>№ ${o.n}. $
    r+=row('Данные',S.src&&(S.src+(A(S.src)?' – '+A(S.src):'')));r+=row('Геометрия',S.geo&&S.geo!==S.src?S.geo:'');r+=row('Достоверность',S.rel);r+=row('Состояние по',S.sts);
    r+=row('Лицензия',[S.lv&&'выдана '+S.lv,S.ld&&'срок до '+S.ld,S.lp&&'прекращена '+S.lp].filter(Boolean).join(', '));r+=row('Высота отвала',S.hsrc);
    r+=row('Отметки рельефа',p.hmin!=null?`${p.hmin}–${p.hmax} м (Terrain Tiles / SRTM)`:'');
-   r+=row('Расчёты','расстояния, категория, очередь, сценарий, СЗЗ – КП, октябрь 2026; снимок Esri – 2025');
+   r+=row('Расчёты','расстояния, категория, очередь, сценарий, СЗЗ – КП, октябрь 2026; снимок Esri — дата съёмки зависит от участка');
    h+=`<div class="sec"><b>Источник и актуальность</b><table>${r}</table>${S.cmt?'<small>'+S.cmt.replace(/^\s*Автопометка:\s*/,'')+'</small>':''}</div>`}
   {const [la,lo]=p.pt,X=Math.round(lo*20037508.34/180),Y=Math.round(Math.log(Math.tan((90+la)*Math.PI/360))*6378137);
    h+=`<div class="sec"><b>Кадастр</b><a class="nspd" href="https://nspd.gov.ru/map?thematic=PKK&zoom=17&coordinate_x=${X}&coordinate_y=${Y}&theme_id=1&baseLayerId=235&is_copy_url=true" target="_blank" rel="noopener">Открыть на карте НСПД ↗</a><br><small>участки ЕГРН, ЗОУИТ, территориальные зоны, правообладатель – на публичной кадастровой карте (открывается из России)</small></div>`}
@@ -1057,6 +1060,7 @@ function legend(){const lg=document.getElementById('legend');if(!lg||typeof flt=
  if(window.groupedLayerLegend)h+=window.groupedLayerLegend(r);
  const sub=[];if(map.hasLayer(stLab))sub.push(r('<i class="tx" style="font-weight:500">ул.</i>','названия улиц (с приближением)'));if(map.hasLayer(rnLab))sub.push(r('<i class="tx">Аб</i>','районы и посёлки'));if(map.hasLayer(poiLab))sub.push(r('<i class="pd"></i>','значимые объекты (с приближением)'));if(sub.length)h+='<h4>Подписи</h4>'+sub.join('');
  if(bmCur==='sch')h+='<h4>Условная карта</h4>'+r('<i class="ar" style="background:#d6cdc0;border:1px solid #baac9e"></i>','здания')+r('<i class="ln" style="border-color:#e8924a;border-top-width:4px"></i>','магистрали')+r('<i class="ln" style="border-color:#f6c460;border-top-width:3px"></i>','главные улицы')+r('<i class="ln" style="border-color:#b4aea6;border-top-width:2px"></i>','улицы и проезды')+r('<i class="ln" style="border-color:#828282;border-top-width:2px"></i>','железные дороги')+r('<i class="ar" style="background:#a6c9e2"></i>','водоёмы')+r('<i class="ar" style="background:#d6e5c8"></i>','леса')+r('<i class="ar" style="background:#c8e2b4"></i>','парки, скверы');
+ if(bmCur==='osm')h+='<h4>Подложка</h4>'+r('<i class="ar" style="background:#e5ecd8;border:1px solid #aaa"></i>','OpenStreetMap · дороги, застройка, природные территории');
  if(bmCur==='sat')h+='<h4>Подложка</h4>'+r('<i class="ar" style="background:linear-gradient(135deg,#3d5a2e,#6b7d55)"></i>','космоснимок © Esri');
  lg.innerHTML=h+'</div>';document.getElementById('lgb').onclick=()=>{legOpen=!legOpen;legend()}}
 // --- панель
@@ -1119,11 +1123,12 @@ apply();setBM('sat');lineCol();map.fitBounds(go.getBounds(),{padding:[12,12]});p
 mxDraw();
 </script>
 
-<script src="zones.js?v=2"></script>
+<script src="zones.js?v=3"></script>
 <script src="layer-panel.js?v=6"></script>
 <script src="object-analysis.js?v=5"></script>
-<script src="vector-map.js?v=1"></script>
+<script src="vector-map.js?v=2"></script>
 <script src="area-analysis.js?v=1"></script>
 <script src="map-tools.js?v=1"></script>
+<script src="basemap-status.js?v=1"></script>
 </body>
 </html>
