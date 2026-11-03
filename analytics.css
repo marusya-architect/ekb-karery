@@ -1,0 +1,41 @@
+#ekb-analytics{background:var(--paper,#fafbf8);color:var(--ink,#182b31);font:12px/1.35 var(--f-body,Arial,sans-serif);border:1px solid #d6ddd6;border-radius:10px;box-shadow:0 3px 18px #0003;width:285px;max-width:calc(100vw - 28px);box-sizing:border-box;text-align:left}
+#ekb-analytics.an-open{width:var(--an-width,820px)}
+#ekb-analytics .an-header{display:flex;gap:10px;align-items:center;padding:9px 10px}
+#ekb-analytics .an-total{margin-left:auto;white-space:nowrap;color:var(--muted);font-size:11px}
+#ekb-analytics button,#ekb-analytics select{font:inherit;color:inherit;cursor:pointer}
+#ekb-analytics #an-toggle{background:#eaf0e9;border:1px solid #d4ddd4;border-radius:5px;width:29px;height:29px;font-size:16px;flex:none}
+#ekb-analytics #an-body{display:grid;grid-template-columns:32px minmax(0,1fr);gap:9px;border-top:1px solid #d6ddd6;max-height:var(--an-body-height,calc(100dvh - 150px));overflow:auto;padding:10px 12px 12px 7px;box-sizing:border-box}
+#ekb-analytics #an-body[hidden]{display:none}
+#ekb-analytics .an-switch{display:flex;flex-direction:column;gap:6px;align-items:center;padding-top:3px}
+#ekb-analytics .an-switch button{height:32px;width:30px;padding:0;background:#edf1eb;border:1px solid #d6ddd6;border-radius:5px;font-size:23px;line-height:1}
+#ekb-analytics .an-switch span{font-size:11px;color:var(--muted)}
+#ekb-analytics .an-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:13px}
+#ekb-analytics .an-toolbar label{display:flex;align-items:center;gap:6px;font-size:11px}
+#ekb-analytics select{background:#fff;border:1px solid #d6ddd6;padding:5px;border-radius:5px;max-width:100%}
+#ekb-analytics .charts{display:grid;grid-template-columns:1fr 1fr 1.1fr;gap:15px}
+#ekb-analytics .charts>div{min-width:0}
+#ekb-analytics h3{font-size:11px;letter-spacing:.03em;text-transform:uppercase;margin:0 0 8px;font-weight:600;color:var(--muted)}
+#ekb-analytics .bar-row{display:grid;grid-template-columns:75px minmax(0,1fr) 34px;align-items:center;gap:5px;margin:7px 0;font-size:11px}
+#ekb-analytics .bar-track{height:17px;display:flex;background:#edf1eb;border-radius:3px;overflow:hidden}
+#ekb-analytics .segment{border:0;margin:0;padding:0;min-width:0;background:var(--seg);height:100%;transition:width .2s}
+#ekb-analytics .number{text-align:right;font-variant-numeric:tabular-nums}
+#ekb-analytics .axis-caption{font-size:11px;color:var(--muted);margin-top:7px}
+#ekb-analytics .an-keylist{display:flex;gap:5px 10px;flex-wrap:wrap;font-size:11px;margin-top:7px}
+#ekb-analytics .key{display:inline-flex;align-items:center;gap:4px}
+#ekb-analytics .sw{width:9px;height:9px;display:inline-block;background:var(--seg);border:0;border-radius:0;flex:none;margin:0}
+#ekb-analytics .heat{display:grid;grid-template-columns:28px repeat(4,minmax(0,1fr));gap:3px;font-size:11px;align-items:center}
+#ekb-analytics .cell{border:0;border-radius:3px;min-height:25px;padding:2px;color:var(--ink);font:inherit;background:color-mix(in srgb,#66835e var(--intensity),#fafbf8);font-variant-numeric:tabular-nums}
+#ekb-analytics .heat-head{text-align:center;color:var(--muted);font-size:11px;white-space:nowrap}
+#ekb-analytics .detail{font-size:11px;margin-top:10px;padding-top:8px;border-top:1px solid #d6ddd6;color:var(--muted);min-height:20px}
+#ekb-analytics .donut{width:100%;height:172px;display:block}
+#ekb-analytics .donut text{fill:var(--ink);font:16px var(--f-body,Arial,sans-serif)}
+#ekb-analytics .donut path[role=button]{cursor:pointer}
+#ekb-analytics .empty{font-size:12px;padding:16px 0;color:var(--muted)}
+#ekb-analytics .scenario-key{font-size:11px;color:var(--muted);line-height:1.5;margin-top:10px}
+#ekb-analytics .scenario-key summary{cursor:pointer}
+#ekb-analytics .scenario-key p{margin:5px 0}
+#ekb-analytics.an-narrow .charts{grid-template-columns:1fr;gap:17px}
+#ekb-analytics.an-narrow #an-body{max-height:min(60dvh,var(--an-body-height))}
+#ekb-analytics.an-narrow .bar-row{grid-template-columns:90px minmax(0,1fr) 45px}
+#ekb-analytics button:focus-visible,#ekb-analytics select:focus-visible,#ekb-analytics path:focus-visible{outline:2px solid #2166ac;outline-offset:2px}
+@media(prefers-reduced-motion:reduce){#ekb-analytics .segment{transition:none}}

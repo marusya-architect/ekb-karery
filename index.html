@@ -799,6 +799,7 @@ h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
 @media (max-width:760px){#stog{top:44%;left:50%;transform:translate(-50%,-1px);width:56px;height:20px;border:1px solid var(--line);border-top:0;border-radius:0 0 8px 8px}#app.collapsed #stog{top:0;left:50%}#app{flex-direction:column}#side{width:auto;height:44%;border-right:0;border-bottom:1px solid var(--line);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}.legend{max-width:200px;max-height:40vh}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
+<link rel="stylesheet" href="analytics.css?v=1">
 </head>
 <body>
 <div id="app">
@@ -813,7 +814,7 @@ h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
  <section><h2>Класс объектов</h2><div class="toggles cls" id="cls"></div></section>
  <section><h2>Сценарий по матрице выбора</h2><div class="q" id="sc"></div>
   <label class="stopf"><input type="checkbox" id="nostop"> скрыть объекты с выявленными стоп-факторами</label></section>
- <section><h2>Раскраска объектов</h2><div class="toggles seg" id="cm"></div></section>
+ <section><h2>Метод классификации</h2><div class="toggles seg" id="cm"></div></section>
  <section><h2>Подложка</h2><div class="toggles seg" id="bm"></div></section>
  <section><h2>Слои</h2><div class="toggles" id="tg"></div></section>
  <section><h2>Инфраструктура и природа</h2><div class="toggles" id="tg2"></div><p class="dlh">OpenStreetMap / NextGIS, выгрузка 2026; кадастровые кварталы – НСПД; подгружаются при включении</p></section>
@@ -955,7 +956,8 @@ objs.forEach((o,i)=>o.n=i+1);
 const SC=[['А+','А – жилой','#b2182b'],['Б+','Б – общественно-деловой, туристический, спортивный','#2166ac'],['В+','В – рекреационный','#1a9850'],['Г+','Г – промышленный, коммунально-складской','#8c8c8c'],['Д+','Д «+» – иной, в рамках градостроительной рекультивации','#35978f'],['Д−','Д «−» – неградостроительная рекультивация (биологическая, консервация)','#a6761d']];
 const scKey=p=>p.typ+p.dir, scCol=p=>(SC.find(x=>x[0]===scKey(p))||[0,0,'#999'])[2];
 let cm='q';
-const colOf=o=>cm==='sc'?scCol(o.p):css(Q[qi(o.q)][o.sq?2:1]);
+const TYPE_COLORS={'карьер':'#d27a37','отвал':'#66835e','свалка':'#82639c'};
+const colOf=o=>cm==='type'?TYPE_COLORS[o.kind]:cm==='sc'?scCol(o.p):css(Q[qi(o.q)][o.sq?2:1]);
 function pop(o){const p=o.p,c=colOf(o);let h=`<div class="pop"><h3>№ ${o.n}. ${p.имя||'без названия'}</h3><span class="pill${o.sq&&qi(o.q)<2?' dk':''}" style="background:${c}">${o.sq?(o.q==='вне очереди'?'вне очереди (не связана с карьером)':'ликвидация: '+o.q):o.q}</span><table>`;for(const k in LAB){const v=fmt(k,p[k]);if(v!==null&&!(o.sq&&k==='класс'))h+=`<tr><td>${LAB[k]}</td><td>${v}</td></tr>`}h+='</table>';if(window.objectAnalysisCard)h+=window.objectAnalysisCard(o);
  if(p.typ){h+=`<div class="sec"><b>Матрица выбора сценария</b><span class="sct" style="background:${scCol(p)}">${p.typ}${p.dir==='−'?'−':'+'}</span>${(SC.find(x=>x[0]===scKey(p))||[0,''])[1]}<br><span class="crit">П ${p.mP} · ИГ ${p.mIG} · Т ${p.mT} · Л ${p.mL} · И ${p.mI}</span> – ${p.exact?'совпадает со строкой '+p.row+' матрицы':'ближайшая строка '+p.row+', сочетание требует дополнительного обоснования'}<br><small>положение: ${p.pos}</small></div>`;
   h+=`<div class="sec"><b>Стоп-факторы</b>${p.stops.length?'<ul>'+p.stops.map(([l,t])=>`<li class="${l==='red'?'red':'amb'}">${l==='red'?'⛔':'⚠'} ${t}</li>`).join('')+'</ul>':'не выявлены'}</div>`;
@@ -1053,9 +1055,10 @@ let legOpen=innerWidth>760&&innerHeight>700;
 function legend(){const lg=document.getElementById('legend');if(!lg||typeof flt==='undefined')return;const r=(i,t)=>`<div class="lg">${i}<span>${t}</span></div>`;
  let h=`<div class="lgh"><b>Условные обозначения</b><button type="button" class="lgb" id="lgb" aria-expanded="${legOpen}" title="${legOpen?'Свернуть':'Развернуть'}">${legOpen?'▾':'▸'}</button></div><div class="lgbody"${legOpen?'':' hidden'}>`;
  const qs=Q.filter(([q])=>flt.qs.has(q));
- if(cm==='sc'){const ss=SC.filter(x=>flt.sc.has(x[0]));if(ss.length)h+='<h4>Сценарий по матрице</h4>'+ss.map(([k,t,c])=>r(`<i class="c" style="background:${c}"></i>`,t)).join('')+r('<i class="s" style="background:#ccc"></i>','квадрат – свалка / полигон ТБО');}
+ if(cm==='type'){h+='<h4>Тип территории</h4>'+[['карьер','Карьеры'],['отвал','Отвалы'],['свалка','Свалки и полигоны ТБО']].filter(([k])=>flt.c.has(k)).map(([k,n])=>r('<i class="'+(k==='свалка'?'s':'c')+'" style="background:'+TYPE_COLORS[k]+'"></i>',n)).join('');}
+ else if(cm==='sc'){const ss=SC.filter(x=>flt.sc.has(x[0]));if(ss.length)h+='<h4>Сценарий по матрице</h4>'+ss.map(([k,t,c])=>r(`<i class="c" style="background:${c}"></i>`,t)).join('')+r('<i class="s" style="background:#ccc"></i>','квадрат – свалка / полигон ТБО');}
  else if(flt.c.has('карьер')||flt.c.has('отвал')){const qq=Q.slice(0,3).filter(([q])=>flt.q.has(q));if(qq.length){const t=[flt.c.has('карьер')?'карьеры':'',flt.c.has('отвал')?'отвалы':''].filter(Boolean).join(' и ');h+=`<h4>${t[0].toUpperCase()+t.slice(1)} – очередь ревитализации</h4>`+qq.map(([q,v])=>r(`<i class="c" style="background:var(${v})"></i>`,q)).join('')}}
- if(cm!=='sc'&&flt.c.has('свалка')&&qs.length)h+='<h4>Свалки и полигоны ТБО – очередь ликвидации</h4>'+qs.map(([q,,v])=>r(`<i class="s" style="background:var(${v})"></i>`,q==='вне очереди'?'вне очереди (> 500 м от карьера)':q)).join('');
+ if(cm==='q'&&flt.c.has('свалка')&&qs.length)h+='<h4>Свалки и полигоны ТБО – очередь ликвидации</h4>'+qs.map(([q,,v])=>r(`<i class="s" style="background:var(${v})"></i>`,q==='вне очереди'?'вне очереди (> 500 м от карьера)':q)).join('');
  if(map.hasLayer(numLayer))h+=r('<i class="nn">12</i>','номер объекта (как в списке)');
  if(window.groupedLayerLegend)h+=window.groupedLayerLegend(r);
  const sub=[];if(map.hasLayer(stLab))sub.push(r('<i class="tx" style="font-weight:500">ул.</i>','названия улиц (с приближением)'));if(map.hasLayer(rnLab))sub.push(r('<i class="tx">Аб</i>','районы и посёлки'));if(map.hasLayer(poiLab))sub.push(r('<i class="pd"></i>','значимые объекты (с приближением)'));if(sub.length)h+='<h4>Подписи</h4>'+sub.join('');
@@ -1074,7 +1077,7 @@ objs.forEach(o=>{const p=o.p,b=document.createElement('button');b.className='ite
  b.onclick=()=>{const bb=o.poly?o.poly.getBounds():L.latLngBounds([o.mk.getLatLng(),o.mk.getLatLng()]);map.fitBounds(bb.pad(1.5),{maxZoom:15});o.mk.openPopup()};
  o.btn=b;list.appendChild(b)});
 let showNum=true;
-function apply(){let n=0,a=0;objs.forEach(o=>{const on=(o.sq?flt.qs:flt.q).has(o.q)&&flt.c.has(o.kind)&&flt.sc.has(scKey(o.p))&&!(flt.nostop&&o.p.red);o.btn.hidden=!on;if(on){n++;a+=+o.p.площадь_расч_га||0;objLayer.addLayer(o.g);numLayer.addLayer(o.nl)}else{objLayer.removeLayer(o.g);numLayer.removeLayer(o.nl)}});legend();cnt.textContent=`показано ${n} из ${objs.length} · ${a.toLocaleString('ru-RU',{maximumFractionDigits:1})} га`}
+function apply(){let n=0,a=0;objs.forEach(o=>{const on=(o.sq?flt.qs:flt.q).has(o.q)&&flt.c.has(o.kind)&&flt.sc.has(scKey(o.p))&&!(flt.nostop&&o.p.red);o.btn.hidden=!on;if(on){n++;a+=+o.p.площадь_расч_га||0;objLayer.addLayer(o.g);numLayer.addLayer(o.nl)}else{objLayer.removeLayer(o.g);numLayer.removeLayer(o.nl)}});legend();cnt.textContent=`показано ${n} из ${objs.length} · ${a.toLocaleString('ru-RU',{maximumFractionDigits:1})} га`;if(window.refreshAnalytics)window.refreshAnalytics()}
 const qd=document.getElementById('q');
 const qsd=document.getElementById('qs');
 function qrow(host,id,q,col,sq,set,g,lab){const a=sum(g),el=document.createElement('label');
@@ -1089,7 +1092,7 @@ SC.forEach(([k,t,c],i)=>{const g=objs.filter(o=>scKey(o.p)===k);if(!g.length)ret
 document.getElementById('nostop').onchange=e=>{flt.nostop=e.target.checked;apply()};
 function recolor(){objs.forEach(o=>{const c=colOf(o);if(o.poly)o.poly.setStyle({fillColor:c});if(o.sq)o.mk.setIcon(L.divIcon({className:'',html:`<div class="sqm" style="background:${c}"></div>`,iconSize:[10,10],iconAnchor:[5,5]}));else o.mk.setStyle({fillColor:c});const d=o.btn.querySelector('.dot');if(d)d.style.background=c});legend()}
 const cmh=document.getElementById('cm');
-[['q','По очереди'],['sc','По сценарию']].forEach(([k,t])=>{const b=document.createElement('button');b.className='chip';b.type='button';b.id='cm-'+k;b.textContent=t;b.setAttribute('aria-pressed',String(k===cm));b.onclick=()=>{cm=k;cmh.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));recolor()};cmh.appendChild(b)});
+[['q','По очереди'],['sc','По сценарию'],['type','По типу']].forEach(([k,t])=>{const b=document.createElement('button');b.className='chip';b.type='button';b.id='cm-'+k;b.textContent=t;b.setAttribute('aria-pressed',String(k===cm));b.onclick=()=>{cm=k;cmh.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));recolor()};cmh.appendChild(b)});
 document.getElementById('dl-geo').onclick=()=>save(`ekb_narushennye_territorii_${stamp()}.geojson`,JSON.stringify({type:'FeatureCollection',name:'нарушенные территории ГО Екатеринбург',features:rows().map(([o,r])=>({type:'Feature',properties:r,geometry:o.f.geometry}))}),'application/geo+json');
 document.getElementById('dl-csv').onclick=()=>{const R=rows().map(x=>x[1]),K=[...new Set(R.flatMap(Object.keys))],e=v=>{v=v==null?'':String(v);return /[";\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};save(`ekb_narushennye_territorii_${stamp()}.csv`,'\ufeff'+[K.join(';'),...R.map(r=>K.map(k=>e(r[k])).join(';'))].join('\r\n'),'text/csv;charset=utf-8')};
 const cl=document.getElementById('cls');
@@ -1128,7 +1131,8 @@ mxDraw();
 <script src="object-analysis.js?v=5"></script>
 <script src="vector-map.js?v=4"></script>
 <script src="area-analysis.js?v=1"></script>
-<script src="map-tools.js?v=1"></script>
+<script src="map-tools.js?v=2"></script>
 <script src="basemap-status.js?v=1"></script>
+<script src="analytics.js?v=1"></script>
 </body>
 </html>
