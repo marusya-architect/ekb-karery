@@ -974,7 +974,7 @@ function pop(o){const p=o.p,c=colOf(o);let h=`<div class="pop"><h3>№ ${o.n}. $
   {const [la,lo]=p.pt,X=Math.round(lo*20037508.34/180),Y=Math.round(Math.log(Math.tan((90+la)*Math.PI/360))*6378137);
    h+=`<div class="sec"><b>Кадастр</b><a class="nspd" href="https://nspd.gov.ru/map?thematic=PKK&zoom=17&coordinate_x=${X}&coordinate_y=${Y}&theme_id=1&baseLayerId=235&is_copy_url=true" target="_blank" rel="noopener">Открыть на карте НСПД ↗</a><br><small>участки ЕГРН, ЗОУИТ, территориальные зоны, правообладатель – на публичной кадастровой карте (открывается из России)</small></div>`}
   if(retOf[p._id]!==undefined){const R=RET[retOf[p._id]];h+=`<div class="sec"><b>Ретроспектива (Esri World Imagery Wayback)</b><img class="rth" src="${R.img}" alt="${R.t}" onclick="lbx(${retOf[p._id]})"><small>${R.t} – нажмите, чтобы увеличить</small></div>`}
-  h+=`<div class="sec"><b>Сценарий использования</b>целевой: ${p.target}<br>допустимо сейчас: <i>${p.now}</i></div>`}
+  h+=`<div class="sec"><b>Сценарий использования</b>целевой: ${p.target}<br>допустимо сейчас: <i>${p.now}</i></div>`;h+=scenarioEvidence(o)}
  return h+'</div>'}
 const byId={};objs.forEach(o=>byId[o.p._id]=o);
 map.createPane('szzP').style.zIndex=405;map.getPane('szzP').style.pointerEvents='none';
@@ -1134,5 +1134,6 @@ mxDraw();
 <script src="map-tools.js?v=2"></script>
 <script src="basemap-status.js?v=1"></script>
 <script src="analytics.js?v=2"></script>
+<script src="scenario-evidence.js?v=1"></script>
 </body>
 </html>
