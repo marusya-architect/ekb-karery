@@ -1,5 +1,9 @@
 /* Evidence from the EKB project registry. Engineering and legal approvals require documents. */
-const pilotQuarries=[1,37,57];
+function groupMembers(group){
+ const ids=[group.quarry,...group.heaps];
+ if(group.quarry===37)ids.unshift(1);
+ return ids.map(id=>byId[id]);
+}
 function scenarioEvidence(o){
  const p=o.p;
  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -18,15 +22,27 @@ function scenarioEvidence(o){
  '<details class="sec"><summary>Что требуется подтвердить</summary><ul>'+checks+'</ul>'+
  (p.fz?'<p>Функциональная зона генплана: '+esc(p.fz)+' · '+esc(p.fzn)+'</p>':'')+
  '<button type="button" class="chip" data-evidence-plan>Показать функциональные зоны генплана</button></details>';
- if(pilotQuarries.includes(p._id))h+='<div class="sec"><b>Связанные территории</b>Старая Линза и Новая Линза входят в пилотную площадку «Шабровские карьеры». С Новой Линзой связан объект реестра «Отвал Новая Линза».<small>Источник: названия объектов реестра и материалы проектного предложения по Екатеринбургу, октябрь 2026 г.</small><button type="button" class="chip" data-show-pilot>Показать вместе</button></div>';
+ const group=quarryGroups.find(item=>groupMembers(item).includes(o));
+ if(group){
+  const members=groupMembers(group);
+  const quarry=byId[group.quarry];
+  const labels=members.map(member=>'№ '+member.n+' · '+esc(member.p.имя));
+  h+='<div class="sec"><b>Связанные территории</b>Карьер № '+quarry.n+' и отвалы по реестру:<ul><li>'+labels.join('</li><li>')+'</li></ul>'+
+     (group.quarry===37?'Старая Линза входит в группу по материалам пилотной площадки «Шабровские карьеры». Отвал относится к Новой Линзе.<br>':'')+
+     '<small>Источник: слой «нарушенные_отвалы» проекта ЕКБ, поле «относится_к»: '+esc(group.reference)+'. Контур карьера OSM '+esc(group.osm)+'.</small>'+
+     '<button type="button" class="chip" data-quarry-group="'+group.quarry+'">Показать вместе</button></div>';
+ }
  return h;
 }
 let pilotSelection;
 document.addEventListener('click',event=>{
  if(event.target.closest('[data-evidence-plan]')){const button=document.getElementById('t-gp');if(button.getAttribute('aria-pressed')!=='true')button.click();}
- if(!event.target.closest('[data-show-pilot]'))return;
+ const button=event.target.closest('[data-quarry-group]');
+ if(!button)return;
+ const group=quarryGroups.find(item=>item.quarry===Number(button.dataset.quarryGroup));
+ if(!group)return;
  if(pilotSelection)map.removeLayer(pilotSelection);
- const members=pilotQuarries.map(id=>byId[id]);
+ const members=groupMembers(group);
  pilotSelection=L.geoJSON(members.map(o=>o.f),{interactive:false,style:{color:'#ffd632',weight:4,fillOpacity:.13}}).addTo(map);
  map.closePopup();map.fitBounds(pilotSelection.getBounds(),{padding:[40,40],maxZoom:15});map.once('popupopen',()=>{if(pilotSelection)map.removeLayer(pilotSelection)});
 });
