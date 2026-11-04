@@ -1,5 +1,5 @@
 /* Evidence from the EKB project registry. Engineering and legal approvals require documents. */
-const pilotQuarries=[1,37];
+const pilotQuarries=[1,37,57];
 function scenarioEvidence(o){
  const p=o.p;
  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -18,7 +18,7 @@ function scenarioEvidence(o){
  '<details class="sec"><summary>Что требуется подтвердить</summary><ul>'+checks+'</ul>'+
  (p.fz?'<p>Функциональная зона генплана: '+esc(p.fz)+' · '+esc(p.fzn)+'</p>':'')+
  '<button type="button" class="chip" data-evidence-plan>Показать функциональные зоны генплана</button></details>';
- if(pilotQuarries.includes(p._id))h+='<div class="sec"><b>Связанные территории</b>Старая Линза и Новая Линза входят в пилотную площадку «Шабровские карьеры».<small>Источник: материалы проектного предложения по Екатеринбургу, октябрь 2026 г.</small><button type="button" class="chip" data-show-pilot>Показать вместе</button></div>';
+ if(pilotQuarries.includes(p._id))h+='<div class="sec"><b>Связанные территории</b>Старая Линза и Новая Линза входят в пилотную площадку «Шабровские карьеры». С Новой Линзой связан объект реестра «Отвал Новая Линза».<small>Источник: названия объектов реестра и материалы проектного предложения по Екатеринбургу, октябрь 2026 г.</small><button type="button" class="chip" data-show-pilot>Показать вместе</button></div>';
  return h;
 }
 let pilotSelection;
