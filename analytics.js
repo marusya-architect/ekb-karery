@@ -10,11 +10,37 @@
  let metric='count',view=0,expanded=false;
  const value=x=>metric==='ha'?(Number(x.ha)||0):1,sum=a=>a.reduce((v,x)=>v+value(x),0);
  const legend=(names,colors)=>'<div class="an-keylist">'+names.map((n,i)=>'<span class="key"><i class="sw" style="--seg:'+colors[i]+'"></i>'+n+'</span>').join('')+'</div>';
-function detail(scene,label,rows){scene.querySelector('.detail').textContent=label+' — '+kinds.map((k,i)=>kindNames[i]+': '+fmt(sum(rows.filter(x=>x.kind===k)))).join(' · ')+(metric==='ha'?' га':' шт.');}
+const selectionPane=map.createPane('analysisSelection');
+selectionPane.style.zIndex=625;
+selectionPane.style.pointerEvents='none';
+const highlights=L.layerGroup().addTo(map);
+let selectionKey=null;
+function clearHighlights(){highlights.clearLayers();selectionKey=null;}
+function detail(scene,label,rows){
+ const key=JSON.stringify([label,rows.map(row=>row.object.p._id)]);
+ const repeated=key===selectionKey;
+ clearHighlights();
+ const message=scene.querySelector('.detail');
+ if(repeated){message.textContent='Выделение снято.';return;}
+ if(!rows.length){message.textContent='В этой группе нет включённых территорий.';return;}
+ selectionKey=key;
+ const options={pane:'analysisSelection',interactive:false,color:'#122c39',weight:5,fill:false};
+ for(const {object} of rows){
+  if(object.poly){
+   L.geoJSON(object.f,{pane:options.pane,interactive:false,style:options}).addTo(highlights);
+   L.geoJSON(object.f,{pane:options.pane,interactive:false,style:{...options,color:'#ffe346',weight:3,fill:true,fillColor:'#ffe346',fillOpacity:.28}}).addTo(highlights);
+  }
+  const point=object.mk.getLatLng();
+  L.circleMarker(point,{...options,radius:10}).addTo(highlights);
+  L.circleMarker(point,{...options,radius:10,color:'#ffe346',weight:3}).addTo(highlights);
+ }
+ message.textContent=label+' · выделено территорий: '+rows.length+'. '+kinds.map((k,i)=>kindNames[i]+' '+fmt(sum(rows.filter(x=>x.kind===k)))).join(' · ')+(metric==='ha'?' га':' шт.');
+ const reset=document.createElement('button');reset.type='button';reset.className='chip';reset.textContent='Снять выделение';reset.onclick=()=>{clearHighlights();message.textContent='Выделение снято.'};message.append(' ',reset);
+}
 function bars(el,groups,scene,colorMode='type'){
  el.replaceChildren();const max=Math.max(1,...groups.map(g=>sum(g.rows)));
  for(const g of groups){const row=document.createElement('div');row.className='bar-row';const label=document.createElement('span');label.textContent=g.label;const track=document.createElement('div');track.className='bar-track';const groups2=colorMode==='type'?kinds:scenarios,colors=colorMode==='type'?kindColors:scColors;
- for(let i=0;i<groups2.length;i++){const rows=g.rows.filter(x=>(colorMode==='type'?x.kind:x.scenario)===groups2[i]),n=sum(rows);if(!n)continue;const seg=document.createElement('button');seg.type='button';seg.className='segment';seg.style.width=(100*n/max)+'%';seg.style.setProperty('--seg',colors[i]);const text=g.label+' · '+(colorMode==='type'?kindNames[i]:scenarios[i])+': '+fmt(n)+(metric==='ha'?' га':' шт.');seg.setAttribute('aria-label',text);seg.title=text;seg.onclick=()=>detail(scene,g.label,rows);track.append(seg)}const number=document.createElement('span');number.className='number';number.textContent=fmt(sum(g.rows));row.append(label,track,number);el.append(row)}
+ for(let i=0;i<groups2.length;i++){const rows=g.rows.filter(x=>(colorMode==='type'?x.kind:x.scenario)===groups2[i]),n=sum(rows);if(!n)continue;const seg=document.createElement('button');seg.type='button';seg.className='segment';seg.style.width=(100*n/max)+'%';seg.style.setProperty('--seg',colors[i]);const text=g.label+' · '+(colorMode==='type'?kindNames[i]:scenarios[i])+': '+fmt(n)+(metric==='ha'?' га':' шт.');seg.setAttribute('aria-label',text);seg.title=text;seg.onclick=()=>detail(scene,g.label+' · '+(colorMode==='type'?kindNames[i]:scenarios[i]),rows);track.append(seg)}const number=document.createElement('span');number.className='number';number.textContent=fmt(sum(g.rows));row.append(label,track,number);el.append(row)}
  el.insertAdjacentHTML('beforeend','<div class="axis-caption">'+(metric==='ha'?'Площадь по атрибутам, га':'Количество территорий, шт.')+'</div>'+legend(colorMode==='type'?kindNames:scenarios,colorMode==='type'?kindColors:scColors));
 }
 function rings(el,groups,colors,scene){
@@ -28,13 +54,14 @@ function heat(el,rows,scene){el.innerHTML='<div class="heat"><span></span>'+qSho
  for(const sc of scenarios){const label=document.createElement('span');label.textContent=sc;grid.append(label);qs.forEach((q,i)=>{const subset=rows.filter(x=>x.scenario===sc&&queue(x)===i),n=sum(subset),cell=document.createElement('button');cell.type='button';cell.className='cell';cell.textContent=n?fmt(n):'—';cell.style.setProperty('--intensity',(n?12+42*n/max:0)+'%');cell.dataset.tooltip=sc+' · '+q+': '+fmt(n)+(metric==='ha'?' га':' шт.');cell.title=cell.dataset.tooltip;cell.setAttribute('aria-label',cell.dataset.tooltip);cell.onclick=()=>detail(scene,sc+' · '+q,subset);grid.append(cell)})}el.insertAdjacentHTML('beforeend','<div class="axis-caption">Столбцы — очереди; строки — сценарии.<br>В ячейке — '+(metric==='ha'?'площадь, га':'число территорий')+'.</div>');}
 
  function render(){
-  const rows=objs.filter(o=>!o.btn.hidden).map(o=>({kind:o.kind,queue:o.q,scenario:scKey(o.p),ha:o.p.площадь_расч_га}));
+  clearHighlights();
+  const rows=objs.filter(o=>!o.btn.hidden).map(o=>({object:o,kind:o.kind,queue:o.q,scenario:scKey(o.p),ha:o.p.площадь_расч_га}));
   root.dataset.count=rows.length;root.querySelector('.an-total').textContent=rows.length+' из '+objs.length;
   root.querySelector('#an-view-name').textContent=view?'Кольца и состав':'Столбцы и матрица';root.querySelector('#an-page').textContent=(view+1)+'/2';
   const queueGroups=qs.map((label,i)=>({label,rows:rows.filter(x=>queue(x)===i)})),scGroups=scenarios.map(label=>({label,rows:rows.filter(x=>x.scenario===label)}));
   const a=root.querySelector('.chart-q .plot'),b=root.querySelector('.chart-sc .plot'),c=root.querySelector('.chart-mix .plot');
   if(view){rings(a,queueGroups,qColors,root);rings(b,scGroups,scColors,root);bars(c,queueGroups,root,'scenario')}else{bars(a,queueGroups,root);bars(b,[...scGroups].sort((a,b)=>sum(b.rows)-sum(a.rows)),root);heat(c,rows,root)}
-  root.querySelector('.detail').textContent=rows.length?'Нажмите сегмент или ячейку, чтобы увидеть состав по типам территории.':'Нет территорий, соответствующих выбранным фильтрам.';
+  root.querySelector('.detail').textContent=rows.length?'Нажмите сегмент или ячейку, чтобы выделить территории на карте.':'Нет территорий, соответствующих выбранным фильтрам.';
  }
  function resize(){const size=map.getSize(),legend=document.getElementById('legend');const reserve=size.x>=900&&legend?legend.getBoundingClientRect().width+30:24;const width=Math.max(260,Math.min(820,size.x-reserve));root.style.setProperty('--an-width',width+'px');const attribution=map.attributionControl.getContainer().offsetHeight;root.style.setProperty('--an-body-height',Math.max(110,size.y-attribution-88)+'px');root.classList.toggle('an-narrow',width<650)}
  root.querySelector('#an-toggle').onclick=()=>{expanded=!expanded;root.classList.toggle('an-open',expanded);root.querySelector('#an-body').hidden=!expanded;const b=root.querySelector('#an-toggle');b.textContent=expanded?'▾':'▴';b.setAttribute('aria-expanded',String(expanded));b.setAttribute('aria-label',expanded?'Свернуть аналитику':'Развернуть аналитику');resize()};
