@@ -44,6 +44,7 @@
    const label=byId(id).textContent;
    if(id.startsWith('v-')&&window.vectorLegend)return window.vectorLegend(id,r);
    if(id.startsWith('zone-'))return window.zoneLegend(ZONES[id.slice(5)]);
+   if(id==='t-linked')return r(area('linear-gradient(90deg,#ac3374,#14699f,#358245)'),label+' · цвет и номер обозначают группу');
    if(id==='t-go')return r(line('#d62728',true),label);
    if(id==='t-rn')return r(line('#ef6a74'),label);
    if(id==='ov-kv')return r(line('#d7191c'),label);
