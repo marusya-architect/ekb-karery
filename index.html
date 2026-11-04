@@ -800,7 +800,7 @@ h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 <link rel="stylesheet" href="analytics.css?v=1">
-<link rel="stylesheet" href="linked-territories.css?v=1">
+<link rel="stylesheet" href="linked-territories.css?v=2">
 </head>
 <body>
 <div id="app">
@@ -1093,7 +1093,7 @@ SC.forEach(([k,t,c],i)=>{const g=objs.filter(o=>scKey(o.p)===k);if(!g.length)ret
 document.getElementById('nostop').onchange=e=>{flt.nostop=e.target.checked;apply()};
 function recolor(){objs.forEach(o=>{const c=colOf(o);if(o.poly)o.poly.setStyle({fillColor:c});if(o.sq)o.mk.setIcon(L.divIcon({className:'',html:`<div class="sqm" style="background:${c}"></div>`,iconSize:[10,10],iconAnchor:[5,5]}));else o.mk.setStyle({fillColor:c});const d=o.btn.querySelector('.dot');if(d)d.style.background=c});legend()}
 const cmh=document.getElementById('cm');
-[['q','По очереди'],['sc','По сценарию'],['type','По типу']].forEach(([k,t])=>{const b=document.createElement('button');b.className='chip';b.type='button';b.id='cm-'+k;b.textContent=t;b.setAttribute('aria-pressed',String(k===cm));b.onclick=()=>{cm=k;cmh.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));recolor()};cmh.appendChild(b)});
+[['q','По очереди'],['sc','По сценарию'],['type','По типу']].forEach(([k,t])=>{const b=document.createElement('button');b.className='chip';b.type='button';b.id='cm-'+k;b.textContent=t;b.setAttribute('aria-pressed',String(k===cm));b.onclick=()=>{cm=k;cmh.querySelectorAll('[id^=cm-]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));recolor()};cmh.appendChild(b)});
 document.getElementById('dl-geo').onclick=()=>save(`ekb_narushennye_territorii_${stamp()}.geojson`,JSON.stringify({type:'FeatureCollection',name:'нарушенные территории ГО Екатеринбург',features:rows().map(([o,r])=>({type:'Feature',properties:r,geometry:o.f.geometry}))}),'application/geo+json');
 document.getElementById('dl-csv').onclick=()=>{const R=rows().map(x=>x[1]),K=[...new Set(R.flatMap(Object.keys))],e=v=>{v=v==null?'':String(v);return /[";\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};save(`ekb_narushennye_territorii_${stamp()}.csv`,'\ufeff'+[K.join(';'),...R.map(r=>K.map(k=>e(r[k])).join(';'))].join('\r\n'),'text/csv;charset=utf-8')};
 const cl=document.getElementById('cls');
@@ -1134,7 +1134,7 @@ mxDraw();
 <script src="area-analysis.js?v=1"></script>
 <script src="quarry-groups.js?v=1"></script>
 <script src="scenario-evidence.js?v=3"></script>
-<script src="linked-territories.js?v=1"></script>
+<script src="linked-territories.js?v=2"></script>
 <script src="map-tools.js?v=2"></script>
 <script src="basemap-status.js?v=1"></script>
 <script src="analytics.js?v=2"></script>

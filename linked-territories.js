@@ -44,7 +44,8 @@
  }
  let current=records[0],zones,zoneRequest,zoneFailed=false;
  const panel=document.createElement('section');panel.className='group-card';panel.hidden=true;panel.setAttribute('aria-label','Карточка связанной территории');
- map.getContainer().append(panel);L.DomEvent.disableClickPropagation(panel);L.DomEvent.disableScrollPropagation(panel);
+ let popup;
+ L.DomEvent.disableClickPropagation(panel);L.DomEvent.disableScrollPropagation(panel);
  function zoneInfo(r){
   if(!zones)return zoneFailed?'Сведения о пересечениях не загрузились.':'Загружаются сведения о пересечениях…';
   return r.members.map(o=>{
@@ -69,9 +70,17 @@
    '<details><summary>Стоп-факторы и ограничения</summary><ul>'+verdicts(r)+'</ul><b>Влияние участников друг на друга</b><p>'+esc(a.internalBuffers.join(' ')||'В реестре нет записей о попадании одного участника в расчётную СЗЗ другого.')+'</p><b>Пересечения с ЗОУИТ по участникам</b><div data-zones>'+zoneInfo(r)+'</div></details>'+
    '<small>Основание группы: «относится_к» — '+esc(r.reference)+', контур OSM '+r.osm+(r.quarry===37?'. Старая Линза включена по пилотному проекту':'')+'. Расчёт предварительный, по полному составу группы. Для проектного решения нужны обследования, правовые основания и проверка генплана.</small>';
  }
- function select(r){current=r;panel.hidden=false;renderCard();panel.scrollTop=0;}
+ function select(r){
+  current=r;
+  panel.hidden=false;
+  renderCard();
+  map.closePopup(popup);
+  popup=L.popup({className:'linked-popup',closeButton:false,maxWidth:310,offset:[0,-24]},r.marker)
+   .setLatLng(r.marker.getLatLng()).setContent(panel).openOn(map);
+  panel.scrollTop=0;
+ }
  panel.addEventListener('click',e=>{
-  if(e.target.closest('[data-close]'))panel.hidden=true;
+  if(e.target.closest('[data-close]'))map.closePopup(popup);
   if(e.target.closest('[data-zoom]'))map.fitBounds(current.shapes.getBounds(),{padding:[35,35],maxZoom:15});
   if(e.target.closest('[data-all]'))map.fitBounds(layer.getBounds(),{padding:[24,24]});
  });
@@ -83,16 +92,17 @@
    if(o.p._id!==r.quarry)L.polyline([anchor,o.p.pt],{pane:'groupShapes',color:r.color,weight:2,dashArray:'4 5',interactive:false}).addTo(shapes);
    L.geoJSON(o.f,{pane:'groupShapes',style:{color:r.color,weight:4,fillColor:r.color,fillOpacity:.38},pointToLayer:(f,ll)=>L.circleMarker(ll,{pane:'groupShapes',radius:8,color:r.color})}).on('click',()=>select(r)).addTo(shapes);
   }
-  L.marker(anchor,{title:title(r)+' · '+r.name,zIndexOffset:1100,icon:L.divIcon({className:'group-badge',html:'<span style="background:'+r.color+'">'+title(r)+'</span>',iconSize:[34,23],iconAnchor:[17,23]})}).on('click',()=>select(r)).addTo(shapes);
+  r.marker=L.marker(anchor,{title:title(r)+' · '+r.name,zIndexOffset:1100,icon:L.divIcon({className:'group-badge',html:'<span style="background:'+r.color+'">'+title(r)+'</span>',iconSize:[34,23],iconAnchor:[17,23]})}).on('click',()=>select(r)).addTo(shapes);
  }
  const entry=window.layerGroups.find(g=>g[1].includes('t-pp'));
- const host=document.getElementById('t-pp').parentElement;
+ const host=document.getElementById('cm');
  entry[1].push('t-linked');
  chip(host,'t-linked','Связанные территории',false,on=>{
   if(on){
-   layer.addTo(map);select(current);
+   layer.addTo(map);
    if(!location.hash.startsWith('#map='))map.fitBounds(layer.getBounds(),{padding:[24,24]});
+   select(current);
    if(!zoneRequest)zoneRequest=fetch('area-analysis.json?v=1').then(r=>{if(!r.ok)throw Error(r.status);return r.json()}).then(j=>{zones=j}).catch(()=>{zoneFailed=true;zoneRequest=null}).finally(()=>{const el=panel.querySelector('[data-zones]');if(el)el.innerHTML=zoneInfo(current)});
-  }else{map.removeLayer(layer);panel.hidden=true}legend();
+  }else{map.closePopup(popup);map.removeLayer(layer);panel.hidden=true}legend();
  });
 })();
